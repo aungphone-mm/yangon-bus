@@ -215,7 +215,7 @@ export default function RoutePlanner({
                       <div className="flex-1 pb-3">
                         <p className="font-medium text-gray-900">{segment.fromName}</p>
                         <div className="mt-1 flex flex-wrap gap-1">
-                          {segment.routes.slice(0, 5).map(route => (
+                          {segment.routes.map(route => (
                             <span
                               key={route}
                               className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded"
@@ -223,11 +223,6 @@ export default function RoutePlanner({
                               {route}
                             </span>
                           ))}
-                          {segment.routes.length > 5 && (
-                            <span className="px-2 py-0.5 text-xs text-gray-500">
-                              +{segment.routes.length - 5} more
-                            </span>
-                          )}
                         </div>
                         <p className="text-xs text-gray-400 mt-1">
                           {segment.distance}m to next stop
