@@ -1,0 +1,21 @@
+{
+  "name": "Yangon Bus",
+  "short_name": "YGN Bus",
+  "description": "Search bus stops, find routes, and plan your journey across Yangon",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#405CAA",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { Stop, PathResult, PlannerGraph } from '@/types/transit';
+
+// Leaflet types
+declare global {
+  interface Window {
+    L: any;
+  }
+}
+
+interface MapViewProps {
+  stops?: Stop[];
+  selectedStop?: Stop | null;
+  path?: PathResult | null;
+  graph?: PlannerGraph;
+  onStopClick?: (stop: Stop) => void;
+  center?: [number, number];
+  zoom?: number;
+}
+
+export default function MapView({
+  stops = [],
+  selectedStop,
+  path,
+  graph,
+  onStopClick,
+  center = [16.8661, 96.1951], // Yangon center
+  zoom = 12,
+}: MapViewProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const pathLineRef = useRef<any>(null);
+
+  // Initialize map
+  useEffect(() => {
+    if (typeof window === 'undefined' || !mapRef.current) return;
+
+    // Load Leaflet CSS
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    // Load Leaflet JS
+    const loadLeaflet = () => {
+      return new Promise<void>((resolve) => {
+        if (window.L) {
+          resolve();
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+      });
+    };
+
+    loadLeaflet().then(() => {
+      if (mapInstanceRef.current) return;
+
+      const L = window.L;
+      const map = L.map(mapRef.current).setView(center, zoom);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+    });
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update markers when stops change
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L) return;
+
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Add stop markers
+    stops.forEach(stop => {
+      const isSelected = selectedStop?.id === stop.id;
+      const isHub = stop.is_hub;
+
+      const icon = L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold
+            ${isSelected ? 'bg-primary border-white scale-125' : isHub ? 'bg-yellow-400 border-yellow-600' : 'bg-white border-primary'}
+            ${isSelected ? 'text-white' : isHub ? 'text-yellow-900' : 'text-primary'}"
+            style="transform: translate(-50%, -50%);">
+            ${isHub ? 'H' : ''}
+          </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+
+      const marker = L.marker([stop.lat, stop.lng], { icon })
+        .addTo(map)
+        .bindPopup(`
+          <div class="p-2">
+            <strong>${stop.name_en}</strong><br>
+            <span class="text-gray-500">${stop.name_mm}</span><br>
+            <span class="text-sm">${stop.township_en}</span><br>
+            <span class="text-xs text-primary">${stop.route_count} routes</span>
+          </div>
+        `);
+
+      marker.on('click', () => {
+        onStopClick?.(stop);
+      });
+
+      markersRef.current.push(marker);
+    });
+  }, [stops, selectedStop, onStopClick]);
+
+  // Draw path when available
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L || !graph) return;
+
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    // Remove existing path
+    if (pathLineRef.current) {
+      pathLineRef.current.remove();
+      pathLineRef.current = null;
+    }
+
+    if (path?.found && path.path.length > 1) {
+      const pathCoords = path.path
+        .map(stopId => {
+          const node = graph.nodes[stopId];
+          return node ? [node.lat, node.lng] : null;
+        })
+        .filter(Boolean);
+
+      if (pathCoords.length > 1) {
+        pathLineRef.current = L.polyline(pathCoords, {
+          color: '#405CAA',
+          weight: 4,
+          opacity: 0.8,
+        }).addTo(map);
+
+        // Add start marker
+        const startNode = graph.nodes[path.path[0]];
+        if (startNode) {
+          const startMarker = L.circleMarker([startNode.lat, startNode.lng], {
+            radius: 10,
+            color: '#22c55e',
+            fillColor: '#22c55e',
+            fillOpacity: 1,
+          }).addTo(map);
+          markersRef.current.push(startMarker);
+        }
+
+        // Add end marker
+        const endNode = graph.nodes[path.path[path.path.length - 1]];
+        if (endNode) {
+          const endMarker = L.circleMarker([endNode.lat, endNode.lng], {
+            radius: 10,
+            color: '#ef4444',
+            fillColor: '#ef4444',
+            fillOpacity: 1,
+          }).addTo(map);
+          markersRef.current.push(endMarker);
+        }
+
+        // Fit bounds to path
+        map.fitBounds(pathLineRef.current.getBounds(), { padding: [50, 50] });
+      }
+    }
+  }, [path, graph]);
+
+  // Center on selected stop
+  useEffect(() => {
+    if (!mapInstanceRef.current || !selectedStop) return;
+    mapInstanceRef.current.setView([selectedStop.lat, selectedStop.lng], 15);
+  }, [selectedStop]);
+
+  return (
+    <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden">
+      <div ref={mapRef} className="absolute inset-0" />
+
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs z-[1000]">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-4 h-4 bg-yellow-400 rounded-full border border-yellow-600"></div>
+          <span>Hub (5+ routes)</span>
+        </div>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-4 h-4 bg-white rounded-full border-2 border-primary"></div>
+          <span>Bus Stop</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-primary rounded-full"></div>
+          <span>Selected</span>
+        </div>
+      </div>
+    </div>
+  );
+}

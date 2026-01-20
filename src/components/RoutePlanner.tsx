@@ -1,0 +1,236 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Stop, StopLookup, PlannerGraph, PathResult } from '@/types/transit';
+import { findPath } from '@/lib/pathfinder';
+import StopSearch from './StopSearch';
+
+interface RoutePlannerProps {
+  stopLookup: StopLookup;
+  graph: PlannerGraph;
+  onPathFound?: (path: PathResult) => void;
+}
+
+export default function RoutePlanner({
+  stopLookup,
+  graph,
+  onPathFound,
+}: RoutePlannerProps) {
+  const [origin, setOrigin] = useState<Stop | null>(null);
+  const [destination, setDestination] = useState<Stop | null>(null);
+  const [result, setResult] = useState<PathResult | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Find path when both stops are selected
+  useEffect(() => {
+    if (origin && destination) {
+      setIsSearching(true);
+
+      // Small delay for UI feedback
+      setTimeout(() => {
+        const pathResult = findPath(graph, origin.id, destination.id);
+        setResult(pathResult);
+        onPathFound?.(pathResult);
+        setIsSearching(false);
+      }, 100);
+    } else {
+      setResult(null);
+    }
+  }, [origin, destination, graph, onPathFound]);
+
+  const handleSwap = () => {
+    const temp = origin;
+    setOrigin(destination);
+    setDestination(temp);
+  };
+
+  const handleClear = () => {
+    setOrigin(null);
+    setDestination(null);
+    setResult(null);
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Header */}
+      <div className="bg-secondary text-white p-4">
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Route Planner
+        </h2>
+      </div>
+
+      {/* Input Section */}
+      <div className="p-4 space-y-3">
+        {/* Origin */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            From
+          </label>
+          <StopSearch
+            stopLookup={stopLookup}
+            onSelectStop={setOrigin}
+            placeholder="Choose starting point..."
+          />
+          {origin && (
+            <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
+              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+              {origin.name_en} ({origin.township_en})
+            </div>
+          )}
+        </div>
+
+        {/* Swap Button */}
+        <div className="flex justify-center">
+          <button
+            onClick={handleSwap}
+            disabled={!origin && !destination}
+            className="p-2 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-full transition-all disabled:opacity-30"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Destination */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            To
+          </label>
+          <StopSearch
+            stopLookup={stopLookup}
+            onSelectStop={setDestination}
+            placeholder="Choose destination..."
+          />
+          {destination && (
+            <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
+              <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+              {destination.name_en} ({destination.township_en})
+            </div>
+          )}
+        </div>
+
+        {/* Clear Button */}
+        {(origin || destination) && (
+          <button
+            onClick={handleClear}
+            className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+
+      {/* Loading */}
+      {isSearching && (
+        <div className="p-4 border-t border-gray-100 text-center">
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+          <p className="mt-2 text-sm text-gray-500">Finding best route...</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {result && !isSearching && (
+        <div className="border-t border-gray-100">
+          {result.found ? (
+            <>
+              {/* Summary */}
+              <div className="p-4 bg-green-50">
+                <div className="flex items-center gap-2 text-green-800">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-medium">Route found!</span>
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-green-800">{result.totalStops}</p>
+                    <p className="text-xs text-green-600">Stops</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-green-800">
+                      {(result.totalDistance / 1000).toFixed(1)}
+                    </p>
+                    <p className="text-xs text-green-600">km</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-green-800">{result.transfers}</p>
+                    <p className="text-xs text-green-600">Transfers</p>
+                  </div>
+                </div>
+                {result.suggestedRoute && (
+                  <p className="mt-2 text-sm text-green-700 text-center">
+                    Take Route <strong>{result.suggestedRoute}</strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Step by step */}
+              <div className="p-4 max-h-80 overflow-y-auto">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  Journey Details
+                </h3>
+                <div className="space-y-3">
+                  {result.segments.map((segment, index) => (
+                    <div key={index} className="flex gap-3">
+                      {/* Line indicator */}
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                        <div className="w-0.5 flex-1 bg-gray-200"></div>
+                        {index === result.segments.length - 1 && (
+                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        )}
+                      </div>
+
+                      {/* Segment info */}
+                      <div className="flex-1 pb-3">
+                        <p className="font-medium text-gray-900">{segment.fromName}</p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {segment.routes.slice(0, 5).map(route => (
+                            <span
+                              key={route}
+                              className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded"
+                            >
+                              {route}
+                            </span>
+                          ))}
+                          {segment.routes.length > 5 && (
+                            <span className="px-2 py-0.5 text-xs text-gray-500">
+                              +{segment.routes.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {segment.distance}m to next stop
+                        </p>
+
+                        {/* Show destination at end */}
+                        {index === result.segments.length - 1 && (
+                          <div className="mt-3">
+                            <p className="font-medium text-gray-900">{segment.toName}</p>
+                            <p className="text-xs text-red-500">Destination</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="p-6 text-center">
+              <svg className="w-12 h-12 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="mt-2 text-gray-500">No route found between these stops</p>
+              <p className="text-sm text-gray-400">Try different stops or check if they are connected</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
