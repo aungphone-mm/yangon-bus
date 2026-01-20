@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Stop, StopLookup, PlannerGraph, PathResult } from '@/types/transit';
 import { findPath } from '@/lib/pathfinder';
 import StopSearch from './StopSearch';
@@ -20,23 +20,41 @@ export default function RoutePlanner({
   const [destination, setDestination] = useState<Stop | null>(null);
   const [result, setResult] = useState<PathResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Use ref to avoid useEffect dependency issues
+  const onPathFoundRef = useRef(onPathFound);
+  onPathFoundRef.current = onPathFound;
 
   // Find path when both stops are selected
   useEffect(() => {
     if (origin && destination) {
       setIsSearching(true);
+      setError(null);
 
-      // Small delay for UI feedback
-      setTimeout(() => {
-        const pathResult = findPath(graph, origin.id, destination.id);
-        setResult(pathResult);
-        onPathFound?.(pathResult);
-        setIsSearching(false);
-      }, 100);
+      // Use requestAnimationFrame for better UI responsiveness
+      const timeoutId = setTimeout(() => {
+        try {
+          console.log('Finding path from', origin.id, 'to', destination.id);
+          const pathResult = findPath(graph, origin.id, destination.id);
+          console.log('Path result:', pathResult);
+          setResult(pathResult);
+          onPathFoundRef.current?.(pathResult);
+        } catch (err) {
+          console.error('Pathfinding error:', err);
+          setError('Error finding route. Please try again.');
+          setResult(null);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 150);
+
+      return () => clearTimeout(timeoutId);
     } else {
       setResult(null);
+      setError(null);
     }
-  }, [origin, destination, graph, onPathFound]);
+  }, [origin, destination, graph]);
 
   const handleSwap = () => {
     const temp = origin;
@@ -48,6 +66,7 @@ export default function RoutePlanner({
     setOrigin(null);
     setDestination(null);
     setResult(null);
+    setError(null);
   };
 
   return (
@@ -132,8 +151,15 @@ export default function RoutePlanner({
         </div>
       )}
 
+      {/* Error */}
+      {error && !isSearching && (
+        <div className="p-4 border-t border-gray-100 bg-red-50 text-center">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
+
       {/* Results */}
-      {result && !isSearching && (
+      {result && !isSearching && !error && (
         <div className="border-t border-gray-100">
           {result.found ? (
             <>
