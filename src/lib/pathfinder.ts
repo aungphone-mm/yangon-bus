@@ -127,23 +127,23 @@ function reconstructPath(
 function findBestRoute(segments: PathSegment[]): string | null {
   if (segments.length === 0) return null;
 
-  const routeCounts = new Map<string, number>();
+  const routeCounts: Record<string, number> = {};
 
   for (const segment of segments) {
     for (const route of segment.routes) {
-      routeCounts.set(route, (routeCounts.get(route) || 0) + 1);
+      routeCounts[route] = (routeCounts[route] || 0) + 1;
     }
   }
 
   let bestRoute = '';
   let bestCount = 0;
 
-  for (const [route, count] of routeCounts) {
+  Object.entries(routeCounts).forEach(([route, count]) => {
     if (count > bestCount) {
       bestCount = count;
       bestRoute = route;
     }
-  }
+  });
 
   return bestRoute || null;
 }
