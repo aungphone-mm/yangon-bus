@@ -38,6 +38,7 @@ export default function Home() {
   const [currentPath, setCurrentPath] = useState<PathResult | null>(null);
   const [showStopDetail, setShowStopDetail] = useState(false);
   const [allRoutes, setAllRoutes] = useState<RouteData[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
 
   // Favorites hook
   const {
@@ -472,20 +473,96 @@ export default function Home() {
             {/* All Routes Tab */}
             {activeTab === 'all-routes' && (
               <div className="animate-fade-in">
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-                    </svg>
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-800">Complete Network View</h2>
-                      <p className="text-sm text-gray-600">All bus stops and routes</p>
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="bg-primary text-white p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                        </svg>
+                        <div>
+                          <h2 className="text-lg font-bold">
+                            {selectedRouteId ? allRoutes.find(r => r.id === selectedRouteId)?.name : 'All Routes'}
+                          </h2>
+                          <p className="text-sm text-white/80">
+                            {selectedRouteId ? 'Route stops' : `${allRoutes.length} routes available`}
+                          </p>
+                        </div>
+                      </div>
+                      {selectedRouteId && (
+                        <button
+                          onClick={() => {
+                            setSelectedRouteId(null);
+                            setShowStopDetail(false);
+                            setSelectedStop(null);
+                          }}
+                          className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
+                        >
+                          Show All
+                        </button>
+                      )}
                     </div>
+                  </div>
+
+                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+                    {!selectedRouteId ? (
+                      // Show all routes list
+                      allRoutes.map((route) => (
+                        <button
+                          key={route.id}
+                          onClick={() => setSelectedRouteId(route.id)}
+                          className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left"
+                        >
+                          <div
+                            className="w-10 h-10 rounded flex items-center justify-center font-bold text-white"
+                            style={{ backgroundColor: route.color }}
+                          >
+                            {route.id}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{route.name}</p>
+                            <p className="text-sm text-gray-500">{route.segments.length} segments</p>
+                          </div>
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      ))
+                    ) : (
+                      // Show stops for selected route
+                      (() => {
+                        const routeStops = stopLookup ? Object.values(stopLookup.stops).filter(
+                          stop => stop.routes.some(r => r.id === selectedRouteId)
+                        ) : [];
+                        return routeStops.map((stop) => (
+                          <button
+                            key={stop.id}
+                            onClick={() => handleStopSelect(stop)}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                              stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
+                            }`}>
+                              {stop.is_hub ? 'H' : ''}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{stop.name_en}</p>
+                              <p className="text-sm text-gray-500">{stop.township_en}</p>
+                            </div>
+                            {isFavorite(stop.id) && (
+                              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                              </svg>
+                            )}
+                          </button>
+                        ));
+                      })()
+                    )}
                   </div>
 
                   {/* Show stop detail if user clicked on a stop */}
                   {showStopDetail && selectedStop && (
-                    <div className="mt-4 animate-fade-in">
+                    <div className="p-4 border-t border-gray-200 animate-fade-in">
                       <StopDetail
                         stop={selectedStop}
                         onClose={() => {
@@ -512,7 +589,11 @@ export default function Home() {
                     : activeTab === 'favorites'
                     ? favoriteStops
                     : activeTab === 'all-routes'
-                    ? Object.values(stopLookup?.stops || {})
+                    ? selectedRouteId
+                      ? Object.values(stopLookup?.stops || {}).filter(stop =>
+                          stop.routes.some(r => r.id === selectedRouteId)
+                        )
+                      : Object.values(stopLookup?.stops || {})
                     : selectedStop
                     ? [selectedStop]
                     : []
@@ -520,7 +601,11 @@ export default function Home() {
                 selectedStop={activeTab === 'all-routes' ? null : selectedStop}
                 path={activeTab === 'planner' ? currentPath : null}
                 graph={graph}
-                allRoutes={activeTab === 'all-routes' ? allRoutes : undefined}
+                allRoutes={activeTab === 'all-routes'
+                  ? selectedRouteId
+                    ? allRoutes.filter(r => r.id === selectedRouteId)
+                    : allRoutes
+                  : undefined}
                 onStopClick={handleStopSelect}
                 center={activeTab === 'all-routes' ? [16.8661, 96.1951] : undefined}
                 zoom={activeTab === 'all-routes' ? 11 : undefined}

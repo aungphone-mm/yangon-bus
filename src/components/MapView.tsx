@@ -93,6 +93,46 @@ export default function MapView({
     };
   }, []);
 
+  // Update map view when center or zoom changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L) return;
+
+    const map = mapInstanceRef.current;
+
+    // Check if map is ready with proper container size
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
+    const updateView = () => {
+      try {
+        // Invalidate size first
+        map.invalidateSize();
+        // Then set view
+        map.setView(center, zoom);
+      } catch (e) {
+        console.error('Error updating map view:', e);
+      }
+    };
+
+    // Wait for map to be ready
+    if (!isMapReady()) {
+      const checkMapReady = setInterval(() => {
+        if (isMapReady()) {
+          clearInterval(checkMapReady);
+          setTimeout(() => updateView(), 100);
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
+
+    // Add delay even if map appears ready
+    setTimeout(() => updateView(), 100);
+  }, [center, zoom]);
+
   // Update markers when stops change
   useEffect(() => {
     if (!mapInstanceRef.current || !window.L) return;
@@ -100,10 +140,18 @@ export default function MapView({
     const L = window.L;
     const map = mapInstanceRef.current;
 
+    // Check if map is ready with proper container size
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
     // Wait for map to be ready
-    if (!map._loaded) {
+    if (!isMapReady()) {
       const checkMapReady = setInterval(() => {
-        if (map._loaded) {
+        if (isMapReady()) {
           clearInterval(checkMapReady);
           addMarkers();
         }
@@ -164,10 +212,18 @@ export default function MapView({
     const L = window.L;
     const map = mapInstanceRef.current;
 
+    // Check if map is ready with proper container size
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
     // Wait for map to be ready
-    if (!map._loaded) {
+    if (!isMapReady()) {
       const checkMapReady = setInterval(() => {
-        if (map._loaded) {
+        if (isMapReady()) {
           clearInterval(checkMapReady);
           drawPath();
         }
@@ -199,38 +255,47 @@ export default function MapView({
           .filter(Boolean);
 
         if (pathCoords.length > 1) {
-          pathLineRef.current = L.polyline(pathCoords, {
-            color: '#405CAA',
-            weight: 4,
-            opacity: 0.8,
-          }).addTo(map);
+          try {
+            // Invalidate size to ensure proper projection
+            map.invalidateSize();
 
-          // Add start marker
-          const startNode = graph.nodes[path.path[0]];
-          if (startNode) {
-            const startMarker = L.circleMarker([startNode.lat, startNode.lng], {
-              radius: 10,
-              color: '#22c55e',
-              fillColor: '#22c55e',
-              fillOpacity: 1,
+            pathLineRef.current = L.polyline(pathCoords, {
+              color: '#405CAA',
+              weight: 4,
+              opacity: 0.8,
             }).addTo(map);
-            markersRef.current.push(startMarker);
-          }
 
-          // Add end marker
-          const endNode = graph.nodes[path.path[path.path.length - 1]];
-          if (endNode) {
-            const endMarker = L.circleMarker([endNode.lat, endNode.lng], {
-              radius: 10,
-              color: '#ef4444',
-              fillColor: '#ef4444',
-              fillOpacity: 1,
-            }).addTo(map);
-            markersRef.current.push(endMarker);
-          }
+            // Add start marker
+            const startNode = graph.nodes[path.path[0]];
+            if (startNode) {
+              const startMarker = L.circleMarker([startNode.lat, startNode.lng], {
+                radius: 10,
+                color: '#22c55e',
+                fillColor: '#22c55e',
+                fillOpacity: 1,
+              }).addTo(map);
+              markersRef.current.push(startMarker);
+            }
 
-          // Fit bounds to path
-          map.fitBounds(pathLineRef.current.getBounds(), { padding: [50, 50] });
+            // Add end marker
+            const endNode = graph.nodes[path.path[path.path.length - 1]];
+            if (endNode) {
+              const endMarker = L.circleMarker([endNode.lat, endNode.lng], {
+                radius: 10,
+                color: '#ef4444',
+                fillColor: '#ef4444',
+                fillOpacity: 1,
+              }).addTo(map);
+              markersRef.current.push(endMarker);
+            }
+
+            // Fit bounds to path
+            if (pathLineRef.current) {
+              map.fitBounds(pathLineRef.current.getBounds(), { padding: [50, 50] });
+            }
+          } catch (e) {
+            console.error('Error drawing path:', e);
+          }
         }
       }
     }
@@ -243,22 +308,38 @@ export default function MapView({
     const L = window.L;
     const map = mapInstanceRef.current;
 
-    // Check if map is ready
-    if (!map._loaded) {
-      // Wait for map to be ready
+    // Check if map is ready with proper container size
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
+    // Wait for map to be ready
+    if (!isMapReady()) {
       const checkMapReady = setInterval(() => {
-        if (map._loaded) {
+        if (isMapReady()) {
           clearInterval(checkMapReady);
-          drawRoutes();
+          // Add small delay to ensure map is fully ready
+          setTimeout(() => drawRoutes(), 50);
         }
       }, 100);
       return () => clearInterval(checkMapReady);
     }
 
-    drawRoutes();
+    // Add small delay even if map appears ready
+    setTimeout(() => drawRoutes(), 50);
 
     function drawRoutes() {
       if (!allRoutes) return;
+
+      // Invalidate size to ensure proper projection
+      try {
+        map.invalidateSize();
+      } catch (e) {
+        console.error('Error invalidating map size:', e);
+      }
 
       // Clear existing route lines
       routeLinesRef.current.forEach(line => {
@@ -301,19 +382,35 @@ export default function MapView({
 
     const map = mapInstanceRef.current;
 
-    // Check if map is ready before setting view
-    if (map._loaded) {
-      map.setView([selectedStop.lat, selectedStop.lng], 15);
-    } else {
-      // Wait for map to be ready
+    // Check if map is ready with proper container size
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
+    const centerOnStop = () => {
+      try {
+        map.invalidateSize();
+        map.setView([selectedStop.lat, selectedStop.lng], 15);
+      } catch (e) {
+        console.error('Error centering on stop:', e);
+      }
+    };
+
+    // Wait for map to be ready
+    if (!isMapReady()) {
       const checkMapReady = setInterval(() => {
-        if (map._loaded) {
+        if (isMapReady()) {
           clearInterval(checkMapReady);
-          map.setView([selectedStop.lat, selectedStop.lng], 15);
+          setTimeout(() => centerOnStop(), 100);
         }
       }, 100);
       return () => clearInterval(checkMapReady);
     }
+
+    setTimeout(() => centerOnStop(), 100);
   }, [selectedStop]);
 
   return (
