@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Stop, StopLookup, PlannerGraph, PathResult } from '@/types/transit';
 import { useFavorites } from '@/lib/useFavorites';
@@ -18,7 +18,14 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   ),
 });
 
-type Tab = 'search' | 'planner' | 'favorites' | 'hubs';
+type Tab = 'search' | 'planner' | 'favorites' | 'hubs' | 'all-routes';
+
+interface RouteData {
+  id: string;
+  name: string;
+  color: string;
+  segments: Array<{ from: [number, number]; to: [number, number] }>;
+}
 
 export default function Home() {
   const [stopLookup, setStopLookup] = useState<StopLookup | null>(null);
@@ -30,6 +37,7 @@ export default function Home() {
   const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const [currentPath, setCurrentPath] = useState<PathResult | null>(null);
   const [showStopDetail, setShowStopDetail] = useState(false);
+  const [allRoutes, setAllRoutes] = useState<RouteData[]>([]);
 
   // Favorites hook
   const {
@@ -88,6 +96,67 @@ export default function Home() {
       township_en: stop.township_en,
     });
   };
+
+  // Process all routes for the all-routes tab
+  const processAllRoutes = useCallback(() => {
+    if (!graph || !stopLookup) return [];
+
+    const routeMap = new Map<string, {
+      id: string;
+      name: string;
+      color: string;
+      segments: Array<{ from: [number, number]; to: [number, number] }>;
+    }>();
+
+    // Iterate through adjacency list
+    Object.entries(graph.adjacency).forEach(([fromId, edges]) => {
+      const fromNode = graph.nodes[fromId];
+      if (!fromNode) return;
+
+      edges.forEach(edge => {
+        const toNode = graph.nodes[edge.to.toString()];
+        if (!toNode) return;
+
+        // For each route on this edge
+        edge.routes.forEach(routeId => {
+          if (!routeMap.has(routeId)) {
+            // Get route info from first stop that has it
+            const stopWithRoute = Object.values(stopLookup.stops).find(
+              stop => stop.routes.some(r => r.id === routeId)
+            );
+            const routeInfo = stopWithRoute?.routes.find(r => r.id === routeId);
+
+            if (routeInfo) {
+              routeMap.set(routeId, {
+                id: routeId,
+                name: routeInfo.name,
+                color: `#${routeInfo.color}`,
+                segments: []
+              });
+            }
+          }
+
+          // Add segment
+          const route = routeMap.get(routeId);
+          if (route) {
+            route.segments.push({
+              from: [fromNode.lat, fromNode.lng],
+              to: [toNode.lat, toNode.lng]
+            });
+          }
+        });
+      });
+    });
+
+    return Array.from(routeMap.values());
+  }, [graph, stopLookup]);
+
+  // Process routes when data is loaded
+  useEffect(() => {
+    if (graph && stopLookup) {
+      setAllRoutes(processAllRoutes());
+    }
+  }, [graph, stopLookup, processAllRoutes]);
 
   // Get favorite stops as full Stop objects
   const favoriteStops = stopLookup
@@ -162,6 +231,7 @@ export default function Home() {
               { id: 'planner' as Tab, label: 'Planner', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
               { id: 'favorites' as Tab, label: 'Favorites', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
               { id: 'hubs' as Tab, label: 'Hubs', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
+              { id: 'all-routes' as Tab, label: 'All Routes', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -398,6 +468,38 @@ export default function Home() {
                 )}
               </div>
             )}
+
+            {/* All Routes Tab */}
+            {activeTab === 'all-routes' && (
+              <div className="animate-fade-in">
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                    </svg>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800">Complete Network View</h2>
+                      <p className="text-sm text-gray-600">All bus stops and routes</p>
+                    </div>
+                  </div>
+
+                  {/* Show stop detail if user clicked on a stop */}
+                  {showStopDetail && selectedStop && (
+                    <div className="mt-4 animate-fade-in">
+                      <StopDetail
+                        stop={selectedStop}
+                        onClose={() => {
+                          setShowStopDetail(false);
+                          setSelectedStop(null);
+                        }}
+                        isFavorite={isFavorite(selectedStop.id)}
+                        onToggleFavorite={() => handleToggleFavorite(selectedStop)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Panel - Map */}
@@ -409,14 +511,19 @@ export default function Home() {
                     ? hubStops
                     : activeTab === 'favorites'
                     ? favoriteStops
+                    : activeTab === 'all-routes'
+                    ? Object.values(stopLookup?.stops || {})
                     : selectedStop
                     ? [selectedStop]
                     : []
                 }
-                selectedStop={selectedStop}
+                selectedStop={activeTab === 'all-routes' ? null : selectedStop}
                 path={activeTab === 'planner' ? currentPath : null}
                 graph={graph}
+                allRoutes={activeTab === 'all-routes' ? allRoutes : undefined}
                 onStopClick={handleStopSelect}
+                center={activeTab === 'all-routes' ? [16.8661, 96.1951] : undefined}
+                zoom={activeTab === 'all-routes' ? 11 : undefined}
               />
             </div>
           </div>

@@ -18,6 +18,12 @@ interface MapViewProps {
   onStopClick?: (stop: Stop) => void;
   center?: [number, number];
   zoom?: number;
+  allRoutes?: Array<{
+    id: string;
+    name: string;
+    color: string;
+    segments: Array<{ from: [number, number]; to: [number, number] }>;
+  }>;
 }
 
 export default function MapView({
@@ -28,11 +34,13 @@ export default function MapView({
   onStopClick,
   center = [16.8661, 96.1951], // Yangon center
   zoom = 12,
+  allRoutes,
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const pathLineRef = useRef<any>(null);
+  const routeLinesRef = useRef<any[]>([]);
 
   // Initialize map
   useEffect(() => {
@@ -77,6 +85,8 @@ export default function MapView({
 
     return () => {
       if (mapInstanceRef.current) {
+        routeLinesRef.current.forEach(line => line.remove());
+        markersRef.current.forEach(marker => marker.remove());
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
@@ -90,12 +100,26 @@ export default function MapView({
     const L = window.L;
     const map = mapInstanceRef.current;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    // Wait for map to be ready
+    if (!map._loaded) {
+      const checkMapReady = setInterval(() => {
+        if (map._loaded) {
+          clearInterval(checkMapReady);
+          addMarkers();
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
 
-    // Add stop markers
-    stops.forEach(stop => {
+    addMarkers();
+
+    function addMarkers() {
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+
+      // Add stop markers
+      stops.forEach(stop => {
       const isSelected = selectedStop?.id === stop.id;
       const isHub = stop.is_hub;
 
@@ -130,6 +154,7 @@ export default function MapView({
 
       markersRef.current.push(marker);
     });
+    }
   }, [stops, selectedStop, onStopClick]);
 
   // Draw path when available
@@ -139,61 +164,156 @@ export default function MapView({
     const L = window.L;
     const map = mapInstanceRef.current;
 
-    // Remove existing path
-    if (pathLineRef.current) {
-      pathLineRef.current.remove();
-      pathLineRef.current = null;
+    // Wait for map to be ready
+    if (!map._loaded) {
+      const checkMapReady = setInterval(() => {
+        if (map._loaded) {
+          clearInterval(checkMapReady);
+          drawPath();
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
     }
 
-    if (path?.found && path.path.length > 1) {
-      const pathCoords = path.path
-        .map(stopId => {
-          const node = graph.nodes[stopId];
-          return node ? [node.lat, node.lng] : null;
-        })
-        .filter(Boolean);
+    drawPath();
 
-      if (pathCoords.length > 1) {
-        pathLineRef.current = L.polyline(pathCoords, {
-          color: '#405CAA',
-          weight: 4,
-          opacity: 0.8,
-        }).addTo(map);
+    function drawPath() {
+      if (!graph) return;
 
-        // Add start marker
-        const startNode = graph.nodes[path.path[0]];
-        if (startNode) {
-          const startMarker = L.circleMarker([startNode.lat, startNode.lng], {
-            radius: 10,
-            color: '#22c55e',
-            fillColor: '#22c55e',
-            fillOpacity: 1,
-          }).addTo(map);
-          markersRef.current.push(startMarker);
+      // Remove existing path
+      if (pathLineRef.current) {
+        try {
+          pathLineRef.current.remove();
+        } catch (e) {
+          // Ignore errors during cleanup
         }
+        pathLineRef.current = null;
+      }
 
-        // Add end marker
-        const endNode = graph.nodes[path.path[path.path.length - 1]];
-        if (endNode) {
-          const endMarker = L.circleMarker([endNode.lat, endNode.lng], {
-            radius: 10,
-            color: '#ef4444',
-            fillColor: '#ef4444',
-            fillOpacity: 1,
+      if (path?.found && path.path.length > 1) {
+        const pathCoords = path.path
+          .map(stopId => {
+            const node = graph.nodes[stopId];
+            return node ? [node.lat, node.lng] : null;
+          })
+          .filter(Boolean);
+
+        if (pathCoords.length > 1) {
+          pathLineRef.current = L.polyline(pathCoords, {
+            color: '#405CAA',
+            weight: 4,
+            opacity: 0.8,
           }).addTo(map);
-          markersRef.current.push(endMarker);
-        }
 
-        // Fit bounds to path
-        map.fitBounds(pathLineRef.current.getBounds(), { padding: [50, 50] });
+          // Add start marker
+          const startNode = graph.nodes[path.path[0]];
+          if (startNode) {
+            const startMarker = L.circleMarker([startNode.lat, startNode.lng], {
+              radius: 10,
+              color: '#22c55e',
+              fillColor: '#22c55e',
+              fillOpacity: 1,
+            }).addTo(map);
+            markersRef.current.push(startMarker);
+          }
+
+          // Add end marker
+          const endNode = graph.nodes[path.path[path.path.length - 1]];
+          if (endNode) {
+            const endMarker = L.circleMarker([endNode.lat, endNode.lng], {
+              radius: 10,
+              color: '#ef4444',
+              fillColor: '#ef4444',
+              fillOpacity: 1,
+            }).addTo(map);
+            markersRef.current.push(endMarker);
+          }
+
+          // Fit bounds to path
+          map.fitBounds(pathLineRef.current.getBounds(), { padding: [50, 50] });
+        }
       }
     }
   }, [path, graph]);
 
+  // Draw all route lines when available
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L || !allRoutes || allRoutes.length === 0) return;
+
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    // Check if map is ready
+    if (!map._loaded) {
+      // Wait for map to be ready
+      const checkMapReady = setInterval(() => {
+        if (map._loaded) {
+          clearInterval(checkMapReady);
+          drawRoutes();
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
+
+    drawRoutes();
+
+    function drawRoutes() {
+      if (!allRoutes) return;
+
+      // Clear existing route lines
+      routeLinesRef.current.forEach(line => {
+        try {
+          line.remove();
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
+      });
+      routeLinesRef.current = [];
+
+      // Draw each route
+      allRoutes.forEach(route => {
+        route.segments.forEach(segment => {
+          try {
+            const line = L.polyline([segment.from, segment.to], {
+              color: route.color,
+              weight: 3,
+              opacity: 0.7,
+            }).addTo(map);
+
+            // Add tooltip on hover
+            line.bindTooltip(
+              `<div class="text-sm"><strong>${route.name}</strong><br/>Route ${route.id}</div>`,
+              { sticky: true }
+            );
+
+            routeLinesRef.current.push(line);
+          } catch (e) {
+            console.error('Error drawing route segment:', e);
+          }
+        });
+      });
+    }
+  }, [allRoutes]);
+
   // Center on selected stop
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedStop) return;
-    mapInstanceRef.current.setView([selectedStop.lat, selectedStop.lng], 15);
+
+    const map = mapInstanceRef.current;
+
+    // Check if map is ready before setting view
+    if (map._loaded) {
+      map.setView([selectedStop.lat, selectedStop.lng], 15);
+    } else {
+      // Wait for map to be ready
+      const checkMapReady = setInterval(() => {
+        if (map._loaded) {
+          clearInterval(checkMapReady);
+          map.setView([selectedStop.lat, selectedStop.lng], 15);
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
   }, [selectedStop]);
 
   return (
