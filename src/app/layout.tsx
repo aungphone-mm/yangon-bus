@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
@@ -9,8 +9,13 @@ export const metadata: Metadata = {
   description: 'Search bus stops, find routes, and plan your journey across Yangon',
   keywords: ['Yangon', 'bus', 'transit', 'YRTA', 'route planner', 'Myanmar'],
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
   themeColor: '#405CAA',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({

@@ -173,6 +173,8 @@ function reconstructPath(
       to: current,
       fromName: fromNode?.name_en || `Stop ${info.from}`,
       toName: toNode?.name_en || `Stop ${current}`,
+      fromName_mm: fromNode?.name_mm,
+      toName_mm: toNode?.name_mm,
       routes: info.edge.routes,
       distance: info.edge.distance,
     });
@@ -226,6 +228,8 @@ function reconstructPathWithRoutes(
       to: current,
       fromName: fromNode?.name_en || `Stop ${info.from}`,
       toName: toNode?.name_en || `Stop ${current}`,
+      fromName_mm: fromNode?.name_mm,
+      toName_mm: toNode?.name_mm,
       routes: info.edge.routes,
       distance: info.edge.distance,
       routeUsed: info.route, // Track the actual route used
@@ -233,6 +237,82 @@ function reconstructPathWithRoutes(
 
     totalDistance += info.edge.distance;
     current = info.from;
+  }
+  path.unshift(startId);
+
+  // Mark transfer points where route changes
+  for (let i = 0; i < segments.length - 1; i++) {
+    const currentSegment = segments[i];
+    const nextSegment = segments[i + 1];
+
+    // Transfer occurs when the route changes between segments
+    if (currentSegment.routeUsed !== nextSegment.routeUsed) {
+      currentSegment.isTransferPoint = true;
+    }
+  }
+
+  // Find suggested route (one that covers most of the journey)
+  const suggestedRoute = segments[0]?.routeUsed || null;
+
+  // Count transfers based on actual route changes
+  const transfers = segments.filter(s => s.isTransferPoint).length;
+
+  return {
+    found: true,
+    path,
+    segments,
+    totalDistance,
+    totalStops: path.length,
+    transfers,
+    suggestedRoute,
+  };
+}
+
+/**
+ * Reconstruct path from state-based parent tracking
+ */
+function reconstructPathWithRoutesFromStates(
+  graph: PlannerGraph,
+  parent: Map<string, PathParent & { fromStateKey: string }>,
+  startId: number,
+  endId: number,
+  endStateKey: string
+): PathResult {
+  const path: number[] = [];
+  const segments: PathSegment[] = [];
+  let totalDistance = 0;
+  let currentStateKey = endStateKey;
+
+  // Build path backwards using state keys
+  while (true) {
+    const parentInfo = parent.get(currentStateKey);
+    if (!parentInfo) break;
+
+    const toStopId = parseInt(currentStateKey.split(':')[0]);
+    path.unshift(toStopId);
+
+    const fromNode = graph.nodes[parentInfo.from];
+    const toNode = graph.nodes[toStopId];
+
+    segments.unshift({
+      from: parentInfo.from,
+      to: toStopId,
+      fromName: fromNode?.name_en || `Stop ${parentInfo.from}`,
+      toName: toNode?.name_en || `Stop ${toStopId}`,
+      fromName_mm: fromNode?.name_mm,
+      toName_mm: toNode?.name_mm,
+      routes: parentInfo.edge.routes,
+      distance: parentInfo.edge.distance,
+      routeUsed: parentInfo.route,
+    });
+
+    totalDistance += parentInfo.edge.distance;
+    currentStateKey = parentInfo.fromStateKey;
+
+    // Stop when we reach the start
+    if (parentInfo.from === startId) {
+      break;
+    }
   }
   path.unshift(startId);
 
@@ -358,23 +438,28 @@ function findPathWithTransferOptimization(
   // Track best cost to reach each (stop, route) state
   const visited = new Map<string, number>();
 
-  // Track parent for path reconstruction
-  const parent = new Map<number, PathParent>();
+  // Track parent for path reconstruction - KEY FIX: Store per STATE not per STOP
+  const parent = new Map<string, PathParent & { fromStateKey: string }>();
+
+  // Track best cost and state for reaching destination
+  let bestDestCost = Infinity;
+  let bestDestStateKey: string | null = null;
 
   while (!queue.isEmpty()) {
     const state = queue.dequeue()!;
-
-    // Found destination
-    if (state.stopId === endId) {
-      return reconstructPathWithRoutes(graph, parent, startId, endId);
-    }
+    const stateKey = `${state.stopId}:${state.currentRoute || 'null'}`;
 
     // Check if we've found a better path to this state
-    const stateKey = `${state.stopId}:${state.currentRoute || 'null'}`;
     if (visited.has(stateKey) && visited.get(stateKey)! <= state.cost) {
       continue;
     }
     visited.set(stateKey, state.cost);
+
+    // Track if we reached destination
+    if (state.stopId === endId && state.cost < bestDestCost) {
+      bestDestCost = state.cost;
+      bestDestStateKey = stateKey;
+    }
 
     // Explore neighbors
     const neighbors = graph.adjacency[state.stopId] || [];
@@ -391,13 +476,14 @@ function findPathWithTransferOptimization(
 
         // If this is a better path to this neighbor state
         if (!visited.has(neighborStateKey) || visited.get(neighborStateKey)! > newCost) {
-          // Update parent (only store best path to each stop, not each state)
-          if (!parent.has(edge.to) || parent.get(edge.to)!.cost > newCost) {
-            parent.set(edge.to, {
+          // Update parent - KEY FIX: Store per STATE
+          if (!parent.has(neighborStateKey) || parent.get(neighborStateKey)!.cost > newCost) {
+            parent.set(neighborStateKey, {
               from: state.stopId,
               edge,
               route: routeOption,
               cost: newCost,
+              fromStateKey: stateKey,
             });
           }
 
@@ -414,16 +500,20 @@ function findPathWithTransferOptimization(
     }
   }
 
-  // No path found
-  return {
-    found: false,
-    path: [],
-    segments: [],
-    totalDistance: 0,
-    totalStops: 0,
-    transfers: 0,
-    suggestedRoute: null,
-  };
+  // Reconstruct path from best destination state
+  if (bestDestStateKey === null) {
+    return {
+      found: false,
+      path: [],
+      segments: [],
+      totalDistance: 0,
+      totalStops: 0,
+      transfers: 0,
+      suggestedRoute: null,
+    };
+  }
+
+  return reconstructPathWithRoutesFromStates(graph, parent, startId, endId, bestDestStateKey);
 }
 
 /**

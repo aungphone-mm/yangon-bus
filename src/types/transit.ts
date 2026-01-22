@@ -83,6 +83,8 @@ export interface PathSegment {
   to: number;
   fromName: string;
   toName: string;
+  fromName_mm?: string; // Burmese name of origin stop
+  toName_mm?: string; // Burmese name of destination stop
   routes: string[];
   distance: number;
   routeUsed?: string; // The actual route used for this segment

@@ -194,9 +194,30 @@ export default function RoutePlanner({
                   </div>
                 </div>
                 {result.suggestedRoute && (
-                  <p className="mt-2 text-sm text-green-700 text-center">
-                    Take Route <strong>{result.suggestedRoute}</strong>
-                  </p>
+                  <div className="mt-3">
+                    <p className="text-sm text-green-700 text-center font-medium">
+                      Take Route <strong>{result.suggestedRoute}</strong>
+                    </p>
+                    {/* Starting instruction with Burmese */}
+                    {result.segments.length > 0 && result.segments[0].fromName_mm && (
+                      <p className="text-xs text-green-700 text-center mt-1" style={{ fontFamily: 'Myanmar3, Padauk, sans-serif' }}>
+                        <strong>{result.segments[0].fromName_mm}</strong> မှ <strong>{result.suggestedRoute}</strong> ဘတ်စ်ကားစီးပါ
+                      </p>
+                    )}
+                    {/* Transfer instructions prominently displayed */}
+                    {result.transfers > 0 && result.segments.filter(s => s.isTransferPoint).map((segment, idx) => {
+                      const nextSegment = result.segments[result.segments.findIndex(s => s === segment) + 1];
+                      return (
+                        <div key={idx} className="mt-2">
+                          {segment.toName_mm && (
+                            <p className="text-xs text-green-700 text-center" style={{ fontFamily: 'Myanmar3, Padauk, sans-serif' }}>
+                              <strong>{segment.routeUsed}</strong> ဘတ်စ်ကားစီး၍ <strong>{segment.toName_mm}</strong> ဘတ်စ်ကားမှတ်တိုင်ရောက်လျှင် <strong>{nextSegment?.routeUsed}</strong> ဘတ်စ်ကားပြောင်းစီးပါ
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 
@@ -257,9 +278,14 @@ export default function RoutePlanner({
                               </svg>
                               Transfer at {segment.toName}
                             </p>
-                            <p className="text-xs text-orange-600 mt-0.5">
-                              Change to Route {result.segments[index + 1]?.routeUsed}
+                            <p className="text-xs text-orange-600 mt-1">
+                              Ride bus <strong>{segment.routeUsed}</strong> and when arrive at <strong>{segment.toName}</strong> bus stop, change to bus <strong>{result.segments[index + 1]?.routeUsed}</strong>
                             </p>
+                            {segment.toName_mm && (
+                              <p className="text-xs text-orange-600 mt-1" style={{ fontFamily: 'Myanmar3, Padauk, sans-serif' }}>
+                                <strong>{segment.routeUsed}</strong> ဘတ်စ်ကားစီး၍ <strong>{segment.toName_mm}</strong> ဘတ်စ်ကားမှတ်တိုင်ရောက်လျှင် <strong>{result.segments[index + 1]?.routeUsed}</strong> ဘတ်စ်ကားပြောင်းစီးပါ
+                              </p>
+                            )}
                           </div>
                         )}
 
