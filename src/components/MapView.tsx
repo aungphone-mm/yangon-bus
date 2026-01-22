@@ -15,6 +15,7 @@ interface MapViewProps {
   selectedStop?: Stop | null;
   originStop?: Stop | null;
   destinationStop?: Stop | null;
+  transferPoints?: Stop[];
   onStopClick?: (stop: Stop) => void;
   center?: [number, number];
   zoom?: number;
@@ -25,6 +26,7 @@ export default function MapView({
   selectedStop,
   originStop = null,
   destinationStop = null,
+  transferPoints = [],
   onStopClick,
   center = [16.8661, 96.1951], // Yangon center
   zoom = 12,
@@ -161,6 +163,7 @@ export default function MapView({
       const isSelected = selectedStop?.id === stop.id;
       const isOrigin = originStop?.id === stop.id;
       const isDestination = destinationStop?.id === stop.id;
+      const isTransfer = transferPoints.some(t => t.id === stop.id);
       const isHub = stop.is_hub;
 
       // Determine marker style
@@ -178,6 +181,12 @@ export default function MapView({
         textColor = 'text-white';
         label = 'B';
         iconSize = [32, 32];
+      } else if (isTransfer) {
+        bgColor = 'bg-orange-500';
+        borderColor = 'border-white';
+        textColor = 'text-white';
+        label = '⇄';
+        iconSize = [28, 28];
       } else if (isSelected) {
         bgColor = 'bg-primary';
         borderColor = 'border-white';
@@ -228,7 +237,7 @@ export default function MapView({
       markersRef.current.push(marker);
     });
     }
-  }, [stops, selectedStop, originStop, destinationStop, onStopClick]);
+  }, [stops, selectedStop, originStop, destinationStop, transferPoints, onStopClick]);
 
   // Center on selected stop
   useEffect(() => {
@@ -325,6 +334,12 @@ export default function MapView({
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">A</div>
                 <span>Origin</span>
+              </div>
+            )}
+            {transferPoints.length > 0 && (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">⇄</div>
+                <span>Transfer</span>
               </div>
             )}
             {destinationStop && (

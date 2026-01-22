@@ -45,12 +45,19 @@ The app uses two primary JSON data sources loaded at runtime:
 The app uses a single-page architecture with 5 tabs (`src/app/page.tsx`):
 
 - **search**: Stop search with Fuse.js fuzzy matching
-- **planner**: Route planning between two stops using BFS
+- **planner**: Route planning between two stops using Dijkstra with transfer optimization
 - **favorites**: LocalStorage-persisted favorite stops
 - **hubs**: Major transfer points (5+ routes)
 - **all-routes**: Network visualization with route filtering
 
 Each tab conditionally renders its content and controls what data is passed to the shared MapView component.
+
+**Planner Tab UI**:
+- Shows actual route used (e.g., "Route 61") instead of all available routes
+- Displays transfer point indicators with:
+  - Orange highlight box: "Transfer at [Stop Name]"
+  - Next route info: "Change to Route [X]"
+  - Visual timeline with color-coded dots (green→orange→red)
 
 ### Route Processing for "All Routes" Tab
 
@@ -82,6 +89,17 @@ This approach accurately represents the network without assumptions about route 
 
 **Common Pitfall**: Attempting to add polylines or markers before the map container has dimensions causes "Cannot read properties of undefined (reading 'x')" errors in Leaflet's projection code.
 
+**Marker Types** (in planner tab):
+- 🟢 **Green "A"** (32x32): Origin stop
+- 🟠 **Orange "⇄"** (28x28): Transfer point where passenger changes buses
+- 🔴 **Red "B"** (32x32): Destination stop
+- 🟡 **Yellow** (24x24): Regular stop or hub (non-planner tabs)
+
+**Transfer Point Visualization**:
+- Extracted from `PathResult.segments` where `isTransferPoint === true`
+- Passed to MapView via `transferPoints` prop (only in planner tab)
+- Map legend updates to show transfer indicator when transfers exist
+
 ### State Management Pattern
 
 State flows unidirectionally from page.tsx to components:
@@ -91,15 +109,33 @@ State flows unidirectionally from page.tsx to components:
 - MapView is purely presentational - it receives stops, routes, paths but doesn't manage them
 - Favorites are managed by custom hook `useFavorites` using LocalStorage
 
-### Pathfinding Algorithm
+### Pathfinding Algorithms
 
-**BFS Implementation** (`src/lib/pathfinder.ts`):
-- Optimizes for fewest stops (not shortest distance)
-- Reconstructs path by backtracking through parent map
-- Suggests optimal route by analyzing route frequency across segments
-- Counts transfers by tracking route changes
+The app implements two pathfinding approaches in `src/lib/pathfinder.ts`:
 
-The graph structure allows O(V+E) pathfinding where V = stops, E = connections.
+#### 1. BFS (Basic) - `findPath()`
+- Optimizes for **fewest stops** (not shortest distance)
+- Time complexity: O(V+E) where V = 2,080 stops, E = 3,008 connections
+- Used as fallback; simple and fast
+
+#### 2. Dijkstra with Transfer Optimization - `findPathWithTransfers()` ⭐ **Default**
+- Optimizes for **fewest transfers**, then fewest stops
+- Uses custom `MinPriorityQueue` (binary min-heap) implementation
+- Time complexity: O((V+E) log V) - acceptable for this graph size
+- **Cost formula**: `cost = (transfers × 100) + (stops × 1)`
+- **Key insight**: Routes 61 and 78 both go Hledan→Sule, but route 61 has fewer stops (15 vs 17), so it's selected
+
+**Algorithm Design**:
+- State space: `(stopId, currentRoute)` pairs, not just stops
+- Tracks which route is currently being used
+- Transfer occurs when switching from one route to another
+- Heavy penalty (100) ensures paths with fewer transfers are strongly preferred
+
+**Path Reconstruction** (`reconstructPathWithRoutes`):
+- Tracks actual route used for each segment via `PathParent.route`
+- Marks transfer points where `routeUsed` changes between consecutive segments
+- Sets `PathSegment.isTransferPoint = true` at transfer locations
+- Calculates accurate transfer count from actual route changes
 
 ### Search Implementation
 
@@ -117,7 +153,10 @@ All transit data types are in `src/types/transit.ts`:
 - **Stop**: Individual bus stop with routes, location, metadata
 - **StopLookup**: Complete stop database structure
 - **PlannerGraph**: Network graph with nodes and adjacency list
-- **PathResult**: BFS pathfinding result
+- **PathResult**: Pathfinding result with segments, transfers, suggested route
+- **PathSegment**: Route segment with:
+  - `routeUsed?: string` - The actual route used (e.g., "61")
+  - `isTransferPoint?: boolean` - Whether to transfer at destination of this segment
 - **RouteInfo**: Route metadata (id, name, color, position)
 
 ## Styling & UI
@@ -144,7 +183,8 @@ When working with MapView:
 2. **Changing view**: Always call `invalidateSize()` before `setView()`
 3. **Route filtering**: Pass filtered `allRoutes` array to MapView
 4. **Stop filtering**: Pass filtered `stops` array to MapView
-5. **Cleanup**: Store references in refs and remove layers in cleanup functions
+5. **Transfer points**: Pass `transferPoints` array (extracted from path segments with `isTransferPoint`)
+6. **Cleanup**: Store references in refs and remove layers in cleanup functions
 
 ### Interactive Route Selection Flow
 

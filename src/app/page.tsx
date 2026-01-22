@@ -169,6 +169,19 @@ export default function Home() {
     [stopLookup]
   );
 
+  // Extract transfer points from path result
+  const transferPoints = useMemo(() => {
+    if (!currentPath || !stopLookup) return [];
+
+    const transferStopIds = currentPath.segments
+      .filter(segment => segment.isTransferPoint)
+      .map(segment => segment.to);
+
+    return transferStopIds
+      .map(id => stopLookup.stops[id])
+      .filter(Boolean);
+  }, [currentPath, stopLookup]);
+
   // Memoize MapView stops prop
   const mapViewStops = useMemo(() => {
     if (activeTab === 'hubs') return hubStops;
@@ -176,6 +189,8 @@ export default function Home() {
     if (activeTab === 'planner') {
       const stops = [];
       if (plannerOrigin) stops.push(plannerOrigin);
+      // Add transfer points to the map so they can be rendered
+      if (transferPoints.length > 0) stops.push(...transferPoints);
       if (plannerDestination) stops.push(plannerDestination);
       return stops;
     }
@@ -184,7 +199,7 @@ export default function Home() {
     }
     if (selectedStop) return [selectedStop];
     return [];
-  }, [activeTab, hubStops, favoriteStops, plannerOrigin, plannerDestination, selectedRouteId, filteredRouteStops, stopLookup, selectedStop]);
+  }, [activeTab, hubStops, favoriteStops, plannerOrigin, plannerDestination, transferPoints, selectedRouteId, filteredRouteStops, stopLookup, selectedStop]);
 
   if (loading) {
     return (
@@ -602,6 +617,7 @@ export default function Home() {
                 selectedStop={activeTab === 'all-routes' ? null : selectedStop}
                 originStop={activeTab === 'planner' ? plannerOrigin : null}
                 destinationStop={activeTab === 'planner' ? plannerDestination : null}
+                transferPoints={activeTab === 'planner' ? transferPoints : []}
                 onStopClick={handleStopSelect}
                 center={activeTab === 'all-routes' ? [16.8661, 96.1951] : undefined}
                 zoom={activeTab === 'all-routes' ? 11 : undefined}

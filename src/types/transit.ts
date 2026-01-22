@@ -85,6 +85,8 @@ export interface PathSegment {
   toName: string;
   routes: string[];
   distance: number;
+  routeUsed?: string; // The actual route used for this segment
+  isTransferPoint?: boolean; // Whether to transfer at the destination of this segment
 }
 
 export interface PathResult {

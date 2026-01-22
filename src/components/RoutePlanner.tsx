@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Stop, StopLookup, PlannerGraph, PathResult } from '@/types/transit';
-import { findPath } from '@/lib/pathfinder';
+import { findPathWithTransfers } from '@/lib/pathfinder';
 import StopSearch from './StopSearch';
 
 interface RoutePlannerProps {
@@ -50,7 +50,7 @@ export default function RoutePlanner({
       const timeoutId = setTimeout(() => {
         try {
           console.log('Finding path from', origin.id, 'to', destination.id);
-          const pathResult = findPath(graph, origin.id, destination.id);
+          const pathResult = findPathWithTransfers(graph, origin.id, destination.id);
           console.log('Path result:', pathResult);
           setResult(pathResult);
           onPathFoundRef.current?.(pathResult);
@@ -210,8 +210,16 @@ export default function RoutePlanner({
                     <div key={index} className="flex gap-3">
                       {/* Line indicator */}
                       <div className="flex flex-col items-center">
-                        <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <div className="w-0.5 flex-1 bg-gray-200"></div>
+                        <div className={`w-3 h-3 rounded-full ${
+                          index === 0
+                            ? 'bg-green-500'
+                            : segment.isTransferPoint
+                            ? 'bg-orange-500'
+                            : 'bg-gray-300'
+                        }`}></div>
+                        <div className={`w-0.5 flex-1 ${
+                          segment.isTransferPoint ? 'bg-orange-300' : 'bg-gray-200'
+                        }`}></div>
                         {index === result.segments.length - 1 && (
                           <div className="w-3 h-3 rounded-full bg-red-500"></div>
                         )}
@@ -221,18 +229,39 @@ export default function RoutePlanner({
                       <div className="flex-1 pb-3">
                         <p className="font-medium text-gray-900">{segment.fromName}</p>
                         <div className="mt-1 flex flex-wrap gap-1">
-                          {segment.routes.map(route => (
-                            <span
-                              key={route}
-                              className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded"
-                            >
-                              {route}
+                          {segment.routeUsed ? (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
+                              Route {segment.routeUsed}
                             </span>
-                          ))}
+                          ) : (
+                            segment.routes.map(route => (
+                              <span
+                                key={route}
+                                className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded"
+                              >
+                                {route}
+                              </span>
+                            ))
+                          )}
                         </div>
                         <p className="text-xs text-gray-400 mt-1">
                           {segment.distance}m to next stop
                         </p>
+
+                        {/* Transfer point indicator */}
+                        {segment.isTransferPoint && (
+                          <div className="mt-2 p-2 bg-orange-50 border-l-2 border-orange-400 rounded">
+                            <p className="text-xs font-semibold text-orange-700 flex items-center gap-1">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                              </svg>
+                              Transfer at {segment.toName}
+                            </p>
+                            <p className="text-xs text-orange-600 mt-0.5">
+                              Change to Route {result.segments[index + 1]?.routeUsed}
+                            </p>
+                          </div>
+                        )}
 
                         {/* Show destination at end */}
                         {index === result.segments.length - 1 && (
