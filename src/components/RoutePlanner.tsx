@@ -9,12 +9,16 @@ interface RoutePlannerProps {
   stopLookup: StopLookup;
   graph: PlannerGraph;
   onPathFound?: (path: PathResult) => void;
+  onOriginChange?: (stop: Stop | null) => void;
+  onDestinationChange?: (stop: Stop | null) => void;
 }
 
 export default function RoutePlanner({
   stopLookup,
   graph,
   onPathFound,
+  onOriginChange,
+  onDestinationChange,
 }: RoutePlannerProps) {
   const [origin, setOrigin] = useState<Stop | null>(null);
   const [destination, setDestination] = useState<Stop | null>(null);
@@ -25,6 +29,16 @@ export default function RoutePlanner({
   // Use ref to avoid useEffect dependency issues
   const onPathFoundRef = useRef(onPathFound);
   onPathFoundRef.current = onPathFound;
+
+  // Notify parent of origin changes
+  useEffect(() => {
+    onOriginChange?.(origin);
+  }, [origin, onOriginChange]);
+
+  // Notify parent of destination changes
+  useEffect(() => {
+    onDestinationChange?.(destination);
+  }, [destination, onDestinationChange]);
 
   // Find path when both stops are selected
   useEffect(() => {
@@ -91,14 +105,10 @@ export default function RoutePlanner({
           <StopSearch
             stopLookup={stopLookup}
             onSelectStop={setOrigin}
+            selectedStop={origin}
+            onClearStop={() => setOrigin(null)}
             placeholder="Choose starting point..."
           />
-          {origin && (
-            <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
-              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-              {origin.name_en} ({origin.township_en})
-            </div>
-          )}
         </div>
 
         {/* Swap Button */}
@@ -122,14 +132,10 @@ export default function RoutePlanner({
           <StopSearch
             stopLookup={stopLookup}
             onSelectStop={setDestination}
+            selectedStop={destination}
+            onClearStop={() => setDestination(null)}
             placeholder="Choose destination..."
           />
-          {destination && (
-            <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
-              <span className="w-3 h-3 bg-red-500 rounded-full"></span>
-              {destination.name_en} ({destination.township_en})
-            </div>
-          )}
         </div>
 
         {/* Clear Button */}

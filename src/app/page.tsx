@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Stop, StopLookup, PlannerGraph, PathResult } from '@/types/transit';
 import { useFavorites } from '@/lib/useFavorites';
@@ -20,13 +20,6 @@ const MapView = dynamic(() => import('@/components/MapView'), {
 
 type Tab = 'search' | 'planner' | 'favorites' | 'hubs' | 'all-routes';
 
-interface RouteData {
-  id: string;
-  name: string;
-  color: string;
-  segments: Array<{ from: [number, number]; to: [number, number] }>;
-}
-
 export default function Home() {
   const [stopLookup, setStopLookup] = useState<StopLookup | null>(null);
   const [graph, setGraph] = useState<PlannerGraph | null>(null);
@@ -37,8 +30,11 @@ export default function Home() {
   const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const [currentPath, setCurrentPath] = useState<PathResult | null>(null);
   const [showStopDetail, setShowStopDetail] = useState(false);
-  const [allRoutes, setAllRoutes] = useState<RouteData[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+
+  // Planner tab states
+  const [plannerOrigin, setPlannerOrigin] = useState<Stop | null>(null);
+  const [plannerDestination, setPlannerDestination] = useState<Stop | null>(null);
 
   // Favorites hook
   const {
@@ -49,6 +45,61 @@ export default function Home() {
     clearFavorites,
     count: favoriteCount,
   } = useFavorites();
+
+  // Memoize route metadata map
+  const allRoutesMap = useMemo(() => {
+    if (!stopLookup) return new Map();
+
+    const routeMap = new Map<string, {
+      id: string;
+      name: string;
+      color: string;
+      stopCount: number;
+      stops: Stop[];
+    }>();
+
+    Object.values(stopLookup.stops).forEach(stop => {
+      stop.routes.forEach(route => {
+        if (!routeMap.has(route.id)) {
+          routeMap.set(route.id, {
+            id: route.id,
+            name: route.name,
+            color: `#${route.color}`,
+            stopCount: 0,
+            stops: []
+          });
+        }
+        const routeData = routeMap.get(route.id)!;
+        routeData.stopCount++;
+        routeData.stops.push(stop);
+      });
+    });
+
+    return routeMap;
+  }, [stopLookup]);
+
+  // Memoize sorted routes array
+  const allRoutesArray = useMemo(() =>
+    Array.from(allRoutesMap.values()).sort((a, b) => a.id.localeCompare(b.id)),
+    [allRoutesMap]
+  );
+
+  // Memoize filtered stops for selected route
+  const filteredRouteStops = useMemo(() => {
+    if (!selectedRouteId) return [];
+    return allRoutesMap.get(selectedRouteId)?.stops || [];
+  }, [selectedRouteId, allRoutesMap]);
+
+  // Optimize favorite lookups with Set
+  const favoriteSet = useMemo(() =>
+    new Set(favorites.map(f => f.id)),
+    [favorites]
+  );
+
+  const isFavoriteOptimized = useCallback((stopId: number) =>
+    favoriteSet.has(stopId),
+    [favoriteSet]
+  );
 
   // Load data on mount
   useEffect(() => {
@@ -80,100 +131,60 @@ export default function Home() {
     loadData();
   }, []);
 
-  const handleStopSelect = (stop: Stop) => {
+  const handleStopSelect = useCallback((stop: Stop) => {
     setSelectedStop(stop);
     setShowStopDetail(true);
-  };
+  }, []);
 
-  const handlePathFound = (path: PathResult) => {
+  const handlePathFound = useCallback((path: PathResult) => {
     setCurrentPath(path);
-  };
+  }, []);
 
-  const handleToggleFavorite = (stop: Stop) => {
+  const handleToggleFavorite = useCallback((stop: Stop) => {
     toggleFavorite({
       id: stop.id,
       name_en: stop.name_en,
       name_mm: stop.name_mm,
       township_en: stop.township_en,
     });
-  };
+  }, [toggleFavorite]);
 
-  const handleRouteClick = (routeId: string) => {
+  const handleRouteClick = useCallback((routeId: string) => {
     setSelectedRouteId(routeId);
     setShowStopDetail(false);
     setSelectedStop(null);
-  };
+  }, []);
 
-  // Process all routes for the all-routes tab
-  const processAllRoutes = useCallback(() => {
-    if (!graph || !stopLookup) return [];
+  // Memoize favorite stops
+  const favoriteStops = useMemo(() =>
+    stopLookup ? favorites.map((f) => stopLookup.stops[f.id]).filter(Boolean) : [],
+    [stopLookup, favorites]
+  );
 
-    const routeMap = new Map<string, {
-      id: string;
-      name: string;
-      color: string;
-      segments: Array<{ from: [number, number]; to: [number, number] }>;
-    }>();
+  // Memoize hub stops
+  const hubStops = useMemo(() =>
+    stopLookup
+      ? stopLookup.hubs.slice(0, 30).map((h) => stopLookup.stops[h.stop_id]).filter(Boolean)
+      : [],
+    [stopLookup]
+  );
 
-    // Iterate through adjacency list
-    Object.entries(graph.adjacency).forEach(([fromId, edges]) => {
-      const fromNode = graph.nodes[fromId];
-      if (!fromNode) return;
-
-      edges.forEach(edge => {
-        const toNode = graph.nodes[edge.to.toString()];
-        if (!toNode) return;
-
-        // For each route on this edge
-        edge.routes.forEach(routeId => {
-          if (!routeMap.has(routeId)) {
-            // Get route info from first stop that has it
-            const stopWithRoute = Object.values(stopLookup.stops).find(
-              stop => stop.routes.some(r => r.id === routeId)
-            );
-            const routeInfo = stopWithRoute?.routes.find(r => r.id === routeId);
-
-            if (routeInfo) {
-              routeMap.set(routeId, {
-                id: routeId,
-                name: routeInfo.name,
-                color: `#${routeInfo.color}`,
-                segments: []
-              });
-            }
-          }
-
-          // Add segment
-          const route = routeMap.get(routeId);
-          if (route) {
-            route.segments.push({
-              from: [fromNode.lat, fromNode.lng],
-              to: [toNode.lat, toNode.lng]
-            });
-          }
-        });
-      });
-    });
-
-    return Array.from(routeMap.values());
-  }, [graph, stopLookup]);
-
-  // Process routes when data is loaded
-  useEffect(() => {
-    if (graph && stopLookup) {
-      setAllRoutes(processAllRoutes());
+  // Memoize MapView stops prop
+  const mapViewStops = useMemo(() => {
+    if (activeTab === 'hubs') return hubStops;
+    if (activeTab === 'favorites') return favoriteStops;
+    if (activeTab === 'planner') {
+      const stops = [];
+      if (plannerOrigin) stops.push(plannerOrigin);
+      if (plannerDestination) stops.push(plannerDestination);
+      return stops;
     }
-  }, [graph, stopLookup, processAllRoutes]);
-
-  // Get favorite stops as full Stop objects
-  const favoriteStops = stopLookup
-    ? favorites.map((f) => stopLookup.stops[f.id]).filter(Boolean)
-    : [];
-
-  // Get hub stops for display
-  const hubStops = stopLookup
-    ? stopLookup.hubs.slice(0, 30).map((h) => stopLookup.stops[h.stop_id]).filter(Boolean)
-    : [];
+    if (activeTab === 'all-routes') {
+      return selectedRouteId ? filteredRouteStops : Object.values(stopLookup?.stops || {});
+    }
+    if (selectedStop) return [selectedStop];
+    return [];
+  }, [activeTab, hubStops, favoriteStops, plannerOrigin, plannerDestination, selectedRouteId, filteredRouteStops, stopLookup, selectedStop]);
 
   if (loading) {
     return (
@@ -307,6 +318,8 @@ export default function Home() {
                   stopLookup={stopLookup}
                   graph={graph}
                   onPathFound={handlePathFound}
+                  onOriginChange={setPlannerOrigin}
+                  onDestinationChange={setPlannerDestination}
                 />
               </div>
             )}
@@ -488,10 +501,10 @@ export default function Home() {
                         </svg>
                         <div>
                           <h2 className="text-lg font-bold">
-                            {selectedRouteId ? allRoutes.find(r => r.id === selectedRouteId)?.name : 'All Routes'}
+                            {selectedRouteId ? allRoutesMap.get(selectedRouteId)?.name || 'Unknown Route' : 'All Routes'}
                           </h2>
                           <p className="text-sm text-white/80">
-                            {selectedRouteId ? 'Route stops' : `${allRoutes.length} routes available`}
+                            {selectedRouteId ? 'Route stops' : `${allRoutesArray.length} routes available`}
                           </p>
                         </div>
                       </div>
@@ -513,7 +526,7 @@ export default function Home() {
                   <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
                     {!selectedRouteId ? (
                       // Show all routes list
-                      allRoutes.map((route) => (
+                      allRoutesArray.map((route) => (
                         <button
                           key={route.id}
                           onClick={() => setSelectedRouteId(route.id)}
@@ -527,7 +540,7 @@ export default function Home() {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-gray-900">{route.name}</p>
-                            <p className="text-sm text-gray-500">{route.segments.length} segments</p>
+                            <p className="text-sm text-gray-500">{route.stopCount} stops</p>
                           </div>
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -536,33 +549,28 @@ export default function Home() {
                       ))
                     ) : (
                       // Show stops for selected route
-                      (() => {
-                        const routeStops = stopLookup ? Object.values(stopLookup.stops).filter(
-                          stop => stop.routes.some(r => r.id === selectedRouteId)
-                        ) : [];
-                        return routeStops.map((stop) => (
-                          <button
-                            key={stop.id}
-                            onClick={() => handleStopSelect(stop)}
-                            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left"
-                          >
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                              stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
-                            }`}>
-                              {stop.is_hub ? 'H' : ''}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">{stop.name_en}</p>
-                              <p className="text-sm text-gray-500">{stop.township_en}</p>
-                            </div>
-                            {isFavorite(stop.id) && (
-                              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                              </svg>
-                            )}
-                          </button>
-                        ));
-                      })()
+                      filteredRouteStops.map((stop: Stop) => (
+                        <button
+                          key={stop.id}
+                          onClick={() => handleStopSelect(stop)}
+                          className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left"
+                        >
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                            stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
+                          }`}>
+                            {stop.is_hub ? 'H' : ''}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{stop.name_en}</p>
+                            <p className="text-sm text-gray-500">{stop.township_en}</p>
+                          </div>
+                          {isFavoriteOptimized(stop.id) && (
+                            <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                          )}
+                        </button>
+                      ))
                     )}
                   </div>
 
@@ -590,29 +598,10 @@ export default function Home() {
           <div className="lg:sticky lg:top-20 h-[500px] lg:h-[calc(100vh-120px)]">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full">
               <MapView
-                stops={
-                  activeTab === 'hubs'
-                    ? hubStops
-                    : activeTab === 'favorites'
-                    ? favoriteStops
-                    : activeTab === 'all-routes'
-                    ? selectedRouteId
-                      ? Object.values(stopLookup?.stops || {}).filter(stop =>
-                          stop.routes.some(r => r.id === selectedRouteId)
-                        )
-                      : Object.values(stopLookup?.stops || {})
-                    : selectedStop
-                    ? [selectedStop]
-                    : []
-                }
+                stops={mapViewStops}
                 selectedStop={activeTab === 'all-routes' ? null : selectedStop}
-                path={activeTab === 'planner' ? currentPath : null}
-                graph={graph}
-                allRoutes={activeTab === 'all-routes'
-                  ? selectedRouteId
-                    ? allRoutes.filter(r => r.id === selectedRouteId)
-                    : allRoutes
-                  : undefined}
+                originStop={activeTab === 'planner' ? plannerOrigin : null}
+                destinationStop={activeTab === 'planner' ? plannerDestination : null}
                 onStopClick={handleStopSelect}
                 center={activeTab === 'all-routes' ? [16.8661, 96.1951] : undefined}
                 zoom={activeTab === 'all-routes' ? 11 : undefined}
