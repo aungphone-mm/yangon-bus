@@ -98,6 +98,12 @@ export default function Home() {
     });
   };
 
+  const handleRouteClick = (routeId: string) => {
+    setSelectedRouteId(routeId);
+    setShowStopDetail(false);
+    setSelectedStop(null);
+  };
+
   // Process all routes for the all-routes tab
   const processAllRoutes = useCallback(() => {
     if (!graph || !stopLookup) return [];
@@ -352,7 +358,7 @@ export default function Home() {
                       </button>
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+                    <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
                       {favorites.map((fav) => {
                         const stop = stopLookup.stops[fav.id];
                         if (!stop) return null;
@@ -420,7 +426,7 @@ export default function Home() {
                       Stops with the most bus routes
                     </p>
                   </div>
-                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
                     {stopLookup.hubs.slice(0, 30).map((hub, index) => {
                       const stop = stopLookup.stops[hub.stop_id];
                       if (!stop) return null;
@@ -504,7 +510,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
                     {!selectedRouteId ? (
                       // Show all routes list
                       allRoutes.map((route) => (
@@ -571,6 +577,7 @@ export default function Home() {
                         }}
                         isFavorite={isFavorite(selectedStop.id)}
                         onToggleFavorite={() => handleToggleFavorite(selectedStop)}
+                        onRouteClick={handleRouteClick}
                       />
                     </div>
                   )}

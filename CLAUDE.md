@@ -63,6 +63,12 @@ The `processAllRoutes()` function (in `page.tsx`) builds route line segments by:
 
 This approach accurately represents the network without assumptions about route continuity.
 
+**Route Filtering Pattern**:
+- Uses `selectedRouteId` state to filter displayed routes and stops
+- When a route is clicked, filters both the `stops` array and `allRoutes` array
+- StopDetail component accepts `onRouteClick` callback for route selection
+- "Show All" button resets filter by setting `selectedRouteId` to null
+
 ### MapView Component & Leaflet Integration
 
 **Critical**: MapView (`src/components/MapView.tsx`) is dynamically imported with `ssr: false` to avoid Leaflet SSR issues.
@@ -121,6 +127,15 @@ All transit data types are in `src/types/transit.ts`:
 - **Responsive**: Mobile-first design with lg: breakpoint for desktop layout
 - **Icons**: Inline SVG paths from Heroicons
 
+### Custom Scrollbar Styling
+
+Two scrollbar styles are defined in `globals.css`:
+
+1. **Default subtle scrollbar**: 8px width, light gray (#cbd5e1)
+2. **Prominent scrollbar** (`.scrollbar-visible` class): 10px width, darker gray (#64748b) with border
+
+Apply `.scrollbar-visible` to scrollable lists (Favorites, Hubs, All Routes) for better UX.
+
 ## Map Operations
 
 When working with MapView:
@@ -130,6 +145,19 @@ When working with MapView:
 3. **Route filtering**: Pass filtered `allRoutes` array to MapView
 4. **Stop filtering**: Pass filtered `stops` array to MapView
 5. **Cleanup**: Store references in refs and remove layers in cleanup functions
+
+### Interactive Route Selection Flow
+
+The "All Routes" tab supports drill-down interaction:
+
+1. User clicks a stop marker on the map
+2. StopDetail component displays with routes at that stop
+3. User clicks a route in StopDetail
+4. `onRouteClick` callback fires with route ID
+5. Parent component sets `selectedRouteId` state
+6. Map re-renders showing only that route's stops and lines
+
+**Implementation**: StopDetail accepts `onRouteClick?: (routeId: string) => void` prop. Pass the handler when rendering StopDetail in any tab that needs route filtering.
 
 ## Data Update Process
 
