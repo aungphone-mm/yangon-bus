@@ -151,9 +151,14 @@ export default function Home() {
 
   const handleRouteClick = useCallback((routeId: string) => {
     setSelectedRouteId(routeId);
-    setShowStopDetail(false);
-    setSelectedStop(null);
-  }, []);
+
+    // Keep StopDetail open for search, favorites, hubs, and all-routes tabs
+    // This allows users to repeatedly click routes to filter while viewing all available routes
+    if (activeTab !== 'search' && activeTab !== 'favorites' && activeTab !== 'hubs' && activeTab !== 'all-routes') {
+      setShowStopDetail(false);
+      setSelectedStop(null);
+    }
+  }, [activeTab]);
 
   // Memoize favorite stops
   const favoriteStops = useMemo(() =>
@@ -184,8 +189,6 @@ export default function Home() {
 
   // Memoize MapView stops prop
   const mapViewStops = useMemo(() => {
-    if (activeTab === 'hubs') return hubStops;
-    if (activeTab === 'favorites') return favoriteStops;
     if (activeTab === 'planner') {
       const stops = [];
       if (plannerOrigin) stops.push(plannerOrigin);
@@ -196,6 +199,16 @@ export default function Home() {
     }
     if (activeTab === 'all-routes') {
       return selectedRouteId ? filteredRouteStops : Object.values(stopLookup?.stops || {});
+    }
+    // For search, favorites, and hubs tabs: show filtered route stops if a route is selected
+    if (activeTab === 'search') {
+      return selectedRouteId ? filteredRouteStops : (selectedStop ? [selectedStop] : []);
+    }
+    if (activeTab === 'favorites') {
+      return selectedRouteId ? filteredRouteStops : favoriteStops;
+    }
+    if (activeTab === 'hubs') {
+      return selectedRouteId ? filteredRouteStops : hubStops;
     }
     if (selectedStop) return [selectedStop];
     return [];
@@ -317,9 +330,11 @@ export default function Home() {
                       onClose={() => {
                         setShowStopDetail(false);
                         setSelectedStop(null);
+                        setSelectedRouteId(null);
                       }}
                       isFavorite={isFavorite(selectedStop.id)}
                       onToggleFavorite={() => handleToggleFavorite(selectedStop)}
+                      onRouteClick={handleRouteClick}
                     />
                   </div>
                 )}
@@ -430,9 +445,11 @@ export default function Home() {
                       onClose={() => {
                         setShowStopDetail(false);
                         setSelectedStop(null);
+                        setSelectedRouteId(null);
                       }}
                       isFavorite={isFavorite(selectedStop.id)}
                       onToggleFavorite={() => handleToggleFavorite(selectedStop)}
+                      onRouteClick={handleRouteClick}
                     />
                   </div>
                 )}
@@ -495,9 +512,11 @@ export default function Home() {
                       onClose={() => {
                         setShowStopDetail(false);
                         setSelectedStop(null);
+                        setSelectedRouteId(null);
                       }}
                       isFavorite={isFavorite(selectedStop.id)}
                       onToggleFavorite={() => handleToggleFavorite(selectedStop)}
+                      onRouteClick={handleRouteClick}
                     />
                   </div>
                 )}
@@ -630,9 +649,20 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          <p className="text-gray-400">
-            Yangon Bus Transit App • Data from YRTA
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img
+              src="/logo.png"
+              alt="Profile"
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-600"
+              onError={(e) => {
+                // Hide image if it doesn't exist
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <p className="text-gray-400">
+              Yangon Bus Transit App • Data from YRTA
+            </p>
+          </div>
           <p className="text-gray-500 mt-1">
             {stopLookup.metadata.total_stops} stops • {graph.metadata.total_edges} connections
             {favoriteCount > 0 && ` • ${favoriteCount} favorites`}
