@@ -148,7 +148,7 @@ export default function StopSearch({
 
       {/* Dropdown Results */}
       {!selectedStop && isOpen && results.length > 0 && (
-        <div className="absolute z-[1001] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[60vh] lg:max-h-80 overflow-y-auto">
           {results.map((stop) => (
             <button
               key={stop.id}
@@ -174,7 +174,7 @@ export default function StopSearch({
 
       {/* No results */}
       {!selectedStop && isOpen && query.length >= 2 && results.length === 0 && (
-        <div className="absolute z-[1001] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center text-gray-500">
+        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-4 text-center text-gray-500">
           No stops found for "{query}"
         </div>
       )}

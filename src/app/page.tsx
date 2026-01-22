@@ -314,13 +314,80 @@ export default function Home() {
             {/* Search Tab */}
             {activeTab === 'search' && (
               <div className="animate-fade-in">
-                <div className="bg-white rounded-lg shadow-lg p-4">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-3">Find a Stop</h2>
-                  <StopSearch
-                    stopLookup={stopLookup}
-                    onSelectStop={handleStopSelect}
-                    placeholder="Search by name, township, or road..."
-                  />
+                <div className="bg-white rounded-lg shadow-lg p-4 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-3">Find a Stop</h2>
+                    <StopSearch
+                      stopLookup={stopLookup}
+                      onSelectStop={handleStopSelect}
+                      placeholder="Search by name, township, or road..."
+                    />
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-3">Find a Bus Route</h2>
+                    <input
+                      type="text"
+                      placeholder="Search by route number (e.g., 61, 78, YBS-1)..."
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={(e) => {
+                        const searchTerm = e.target.value.toLowerCase().trim();
+                        if (searchTerm === '') {
+                          setSelectedRouteId(null);
+                          return;
+                        }
+                        // Find matching route
+                        const matchingRoute = allRoutesArray.find(route =>
+                          route.id.toLowerCase().includes(searchTerm) ||
+                          route.name.toLowerCase().includes(searchTerm)
+                        );
+                        if (matchingRoute) {
+                          setSelectedRouteId(matchingRoute.id);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* Show route results */}
+                  {selectedRouteId && !selectedStop && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-md font-semibold text-gray-800">
+                          Route {selectedRouteId} Stops
+                        </h3>
+                        <button
+                          onClick={() => setSelectedRouteId(null)}
+                          className="text-sm text-gray-500 hover:text-gray-700"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      <div className="max-h-[400px] overflow-y-auto space-y-2 scrollbar-visible">
+                        {filteredRouteStops.map((stop: Stop) => (
+                          <button
+                            key={stop.id}
+                            onClick={() => handleStopSelect(stop)}
+                            className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                          >
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                              stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
+                            }`}>
+                              {stop.is_hub ? 'H' : ''}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{stop.name_en}</p>
+                              <p className="text-sm text-gray-500">{stop.township_en}</p>
+                            </div>
+                            {isFavoriteOptimized(stop.id) && (
+                              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {showStopDetail && selectedStop && (

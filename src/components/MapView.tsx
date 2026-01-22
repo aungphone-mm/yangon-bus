@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stop } from '@/types/transit';
 
 // Leaflet types
@@ -34,6 +34,18 @@ export default function MapView({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMapLocked, setIsMapLocked] = useState(true); // Start locked on mobile
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -66,7 +78,10 @@ export default function MapView({
       if (mapInstanceRef.current) return;
 
       const L = window.L;
-      const map = L.map(mapRef.current).setView(center, zoom);
+      const map = L.map(mapRef.current, {
+        dragging: !isMobile, // Disable dragging on mobile by default
+        tap: true,
+      }).setView(center, zoom);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
@@ -83,7 +98,22 @@ export default function MapView({
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [isMobile]);
+
+  // Toggle map dragging based on lock state (mobile only)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !isMobile) return;
+
+    const map = mapInstanceRef.current;
+
+    if (isMapLocked) {
+      map.dragging.disable();
+      map.scrollWheelZoom.disable();
+    } else {
+      map.dragging.enable();
+      map.scrollWheelZoom.enable();
+    }
+  }, [isMapLocked, isMobile]);
 
   // Update map view when center or zoom changes
   useEffect(() => {
@@ -325,6 +355,25 @@ export default function MapView({
   return (
     <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden">
       <div ref={mapRef} className="absolute inset-0" />
+
+      {/* Mobile Map Lock/Unlock Button */}
+      {isMobile && (
+        <button
+          onClick={() => setIsMapLocked(!isMapLocked)}
+          className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 z-[1000] hover:bg-gray-50 active:bg-gray-100 transition-colors"
+          aria-label={isMapLocked ? "Unlock map" : "Lock map"}
+        >
+          {isMapLocked ? (
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
+          )}
+        </button>
+      )}
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs z-[1000]">
