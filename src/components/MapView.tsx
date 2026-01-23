@@ -34,10 +34,17 @@ export default function MapView({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile device immediately using window.innerWidth
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 1024;
+    }
+    return false; // Default to desktop for SSR
+  });
   const [isMapLocked, setIsMapLocked] = useState(true); // Start locked on mobile
 
-  // Detect mobile device
+  // Detect mobile device and handle resize
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024); // lg breakpoint
@@ -78,8 +85,13 @@ export default function MapView({
       if (mapInstanceRef.current) return;
 
       const L = window.L;
+
+      // Check if device is mobile at initialization time
+      const isMobileDevice = window.innerWidth < 1024;
+
       const map = L.map(mapRef.current, {
-        dragging: !isMobile, // Disable dragging on mobile by default
+        dragging: !isMobileDevice, // Enable on desktop, disable on mobile
+        scrollWheelZoom: !isMobileDevice, // Enable on desktop, disable on mobile
         tap: true,
       }).setView(center, zoom);
 
@@ -98,20 +110,27 @@ export default function MapView({
         mapInstanceRef.current = null;
       }
     };
-  }, [isMobile]);
+  }, []); // Only initialize once
 
-  // Toggle map dragging based on lock state (mobile only)
+  // Toggle map dragging based on lock state and device type
   useEffect(() => {
-    if (!mapInstanceRef.current || !isMobile) return;
+    if (!mapInstanceRef.current) return;
 
     const map = mapInstanceRef.current;
 
-    if (isMapLocked) {
-      map.dragging.disable();
-      map.scrollWheelZoom.disable();
-    } else {
+    // On desktop, always enable dragging and zoom
+    if (!isMobile) {
       map.dragging.enable();
       map.scrollWheelZoom.enable();
+    } else {
+      // On mobile, respect the lock state
+      if (isMapLocked) {
+        map.dragging.disable();
+        map.scrollWheelZoom.disable();
+      } else {
+        map.dragging.enable();
+        map.scrollWheelZoom.enable();
+      }
     }
   }, [isMapLocked, isMobile]);
 
