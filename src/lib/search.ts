@@ -50,12 +50,51 @@ export function searchStops(query: string, limit: number = 10): SearchResult[] {
   // Search with higher limit to account for potential duplicates
   const results = fuseInstance.search(query, { limit: limit * 3 });
 
-  // Deduplicate by stop ID (keep best score for each stop)
+  // Deduplicate by stop ID and spatial proximity
   const seenIds = new Set<number>();
   const uniqueResults: SearchResult[] = [];
+  const DUPLICATE_RADIUS_METERS = 50; // Consider stops within 50m as duplicates
 
   for (const result of results) {
-    if (!seenIds.has(result.item.id)) {
+    if (seenIds.has(result.item.id)) {
+      continue;
+    }
+
+    // Check if we already have a nearby stop with the same name
+    const isDuplicate = uniqueResults.some(existing => {
+      const isSameName = existing.stop.name_en === result.item.name_en &&
+                        existing.stop.name_mm === result.item.name_mm;
+      if (!isSameName) return false;
+
+      const distance = haversineDistance(
+        existing.stop.lat,
+        existing.stop.lng,
+        result.item.lat,
+        result.item.lng
+      );
+
+      // If it's a spatial duplicate, merge the route counts
+      if (distance <= DUPLICATE_RADIUS_METERS) {
+        // Keep the stop with more routes, or better score if route counts are equal
+        if (result.item.route_count > existing.stop.route_count ||
+            (result.item.route_count === existing.stop.route_count &&
+             (result.score || 0) < existing.score)) {
+          // Replace with the better stop
+          const index = uniqueResults.indexOf(existing);
+          uniqueResults[index] = {
+            stop: result.item,
+            score: result.score || 0,
+            matchedField: result.matches?.[0]?.key || 'name_en',
+          };
+          seenIds.add(result.item.id);
+        }
+        return true;
+      }
+
+      return false;
+    });
+
+    if (!isDuplicate) {
       seenIds.add(result.item.id);
       uniqueResults.push({
         stop: result.item,
