@@ -190,7 +190,7 @@ export default function RoutePlanner({
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-green-800">{result.transfers}</p>
-                    <p className="text-xs text-green-600">လဲစီးခြင်း</p>
+                    <p className="text-xs text-green-600">ပြောင်းလဲစီးခြင်း</p>
                   </div>
                 </div>
                 {result.suggestedRoute && (
@@ -276,7 +276,7 @@ export default function RoutePlanner({
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                               </svg>
-                              လဲစီးရမည့်နေရာ {segment.toName}
+                              ဘတ်စ်ပြောင်းစီးရမည့်နေရာ {segment.toName}
                             </p>
                             <p className="text-xs text-orange-600 mt-1">
                               ဘတ်စ်ကား <strong>{segment.routeUsed}</strong> ဖြင့်စီး၍ <strong>{segment.toName}</strong> ဘတ်စ်မှတ်တိုင်ရောက်လျှင် ဘတ်စ်ကား <strong>{result.segments[index + 1]?.routeUsed}</strong> သို့ပြောင်းစီးပါ

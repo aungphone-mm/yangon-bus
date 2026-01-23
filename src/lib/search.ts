@@ -4,6 +4,17 @@ import { Stop, StopLookup, SearchResult } from '@/types/transit';
 let fuseInstance: Fuse<Stop> | null = null;
 let stopsArray: Stop[] = [];
 
+// Route search types and instances
+export interface RouteSearchResult {
+  id: string;
+  name: string;
+  color: string;
+  stopCount: number;
+}
+
+let routeFuseInstance: Fuse<RouteSearchResult> | null = null;
+let routesArray: RouteSearchResult[] = [];
+
 /**
  * Initialize the search index with stop data
  */
@@ -12,17 +23,19 @@ export function initializeSearch(stopLookup: StopLookup): void {
 
   fuseInstance = new Fuse(stopsArray, {
     keys: [
-      { name: 'name_en', weight: 2 },
-      { name: 'name_mm', weight: 2 },
+      { name: 'name_en', weight: 1.5 },
+      { name: 'name_mm', weight: 2.5 },
       { name: 'township_en', weight: 1 },
-      { name: 'township_mm', weight: 1 },
       { name: 'road_en', weight: 0.5 },
+      { name: 'road_mm', weight: 1 },
     ],
-    threshold: 0.4,
+    threshold: 0.5,
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
     ignoreLocation: true,
+    distance: 100,
+    findAllMatches: true,
   });
 }
 
@@ -129,4 +142,53 @@ export function getHubs(stopLookup: StopLookup, limit: number = 20): Stop[] {
  */
 export function getStopById(stopLookup: StopLookup, id: number): Stop | undefined {
   return stopLookup.stops[id];
+}
+
+/**
+ * Initialize the route search index with route data
+ */
+export function initializeRouteSearch(stopLookup: StopLookup): void {
+  const routeMap = new Map<string, RouteSearchResult>();
+
+  // Build route map from stops
+  Object.values(stopLookup.stops).forEach(stop => {
+    stop.routes.forEach(route => {
+      if (!routeMap.has(route.id)) {
+        routeMap.set(route.id, {
+          id: route.id,
+          name: route.name,
+          color: `#${route.color}`,
+          stopCount: 0,
+        });
+      }
+      const routeData = routeMap.get(route.id)!;
+      routeData.stopCount++;
+    });
+  });
+
+  routesArray = Array.from(routeMap.values()).sort((a, b) => a.id.localeCompare(b.id));
+
+  routeFuseInstance = new Fuse(routesArray, {
+    keys: [
+      { name: 'id', weight: 2 },
+      { name: 'name', weight: 1 },
+    ],
+    threshold: 0.3,
+    includeScore: true,
+    minMatchCharLength: 1,
+    ignoreLocation: true,
+  });
+}
+
+/**
+ * Search for routes by ID or name
+ */
+export function searchRoutes(query: string, limit: number = 10): RouteSearchResult[] {
+  if (!routeFuseInstance || !query.trim()) {
+    return [];
+  }
+
+  const results = routeFuseInstance.search(query, { limit });
+
+  return results.map(result => result.item);
 }

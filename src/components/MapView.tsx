@@ -407,7 +407,7 @@ export default function MapView({
             {transferPoints.length > 0 && (
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">⇄</div>
-                <span>လဲစီးရာ</span>
+                <span>ပြောင်းလဲစီးရာ</span>
               </div>
             )}
             {destinationStop && (

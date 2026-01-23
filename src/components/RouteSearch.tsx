@@ -1,37 +1,38 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Stop, StopLookup } from '@/types/transit';
-import { searchStops, initializeSearch } from '@/lib/search';
+import { StopLookup } from '@/types/transit';
+import { searchRoutes, initializeRouteSearch, RouteSearchResult } from '@/lib/search';
 
-interface StopSearchProps {
+interface RouteSearchProps {
   stopLookup: StopLookup;
-  onSelectStop: (stop: Stop) => void;
-  selectedStop?: Stop | null;
-  onClearStop?: () => void;
+  onSelectRoute: (routeId: string) => void;
+  selectedRouteId?: string | null;
+  onClearRoute?: () => void;
   placeholder?: string;
   className?: string;
 }
 
-export default function StopSearch({
+export default function RouteSearch({
   stopLookup,
-  onSelectStop,
-  selectedStop = null,
-  onClearStop,
-  placeholder = 'Search stops...',
+  onSelectRoute,
+  selectedRouteId = null,
+  onClearRoute,
+  placeholder = 'လမ်းကြောင်းနံပါတ်ဖြင့်ရှာရန် (ဥပမာ 61, 78, YBS-1)...',
   className = '',
-}: StopSearchProps) {
+}: RouteSearchProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Stop[]>([]);
+  const [results, setResults] = useState<RouteSearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [justSelected, setJustSelected] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<RouteSearchResult | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Initialize search on mount or when stopLookup changes
   useEffect(() => {
     if (stopLookup) {
-      initializeSearch(stopLookup);
+      initializeRouteSearch(stopLookup);
       setInitialized(true);
     }
   }, [stopLookup]);
@@ -40,21 +41,33 @@ export default function StopSearch({
   useEffect(() => {
     if (!initialized) return;
 
-    // Skip search if user just selected a stop
+    // Skip search if user just selected a route
     if (justSelected) {
       setJustSelected(false);
       return;
     }
 
-    if (query.length >= 2) {
-      const searchResults = searchStops(query, 8);
-      setResults(searchResults.map(r => r.stop));
+    if (query.length >= 1) {
+      const searchResults = searchRoutes(query, 10);
+      setResults(searchResults);
       setIsOpen(true);
     } else {
       setResults([]);
       setIsOpen(false);
     }
   }, [query, initialized, justSelected]);
+
+  // Update selected route when selectedRouteId changes
+  useEffect(() => {
+    if (selectedRouteId && initialized) {
+      const searchResults = searchRoutes(selectedRouteId, 1);
+      if (searchResults.length > 0) {
+        setSelectedRoute(searchResults[0]);
+      }
+    } else {
+      setSelectedRoute(null);
+    }
+  }, [selectedRouteId, initialized]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -67,35 +80,36 @@ export default function StopSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = (stop: Stop) => {
+  const handleSelect = (route: RouteSearchResult) => {
     setJustSelected(true);
     setQuery('');
     setIsOpen(false);
-    onSelectStop(stop);
+    setSelectedRoute(route);
+    onSelectRoute(route.id);
   };
 
   const handleClear = () => {
     setQuery('');
     setResults([]);
     setIsOpen(false);
-    onClearStop?.();
+    setSelectedRoute(null);
+    onClearRoute?.();
   };
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
-      {selectedStop ? (
+      {selectedRoute ? (
         /* Selected Badge Display */
-        <div className="flex items-center gap-2 p-3 bg-green-50 border-2 border-green-500 rounded-lg group hover:bg-green-100 transition-colors">
+        <div className="flex items-center gap-2 p-3 bg-blue-50 border-2 border-blue-500 rounded-lg group hover:bg-blue-100 transition-colors">
+          <div
+            className="w-10 h-10 rounded flex items-center justify-center font-bold text-white flex-shrink-0"
+            style={{ backgroundColor: selectedRoute.color }}
+          >
+            {selectedRoute.id}
+          </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-gray-900 truncate">{selectedStop.name_en}</p>
-                <p className="text-sm text-gray-600 truncate">{selectedStop.township_en}</p>
-              </div>
-            </div>
+            <p className="font-medium text-gray-900 truncate">{selectedRoute.name}</p>
+            <p className="text-sm text-gray-600">{selectedRoute.stopCount} မှတ်တိုင်</p>
           </div>
           <button
             onClick={handleClear}
@@ -127,7 +141,7 @@ export default function StopSearch({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
             />
           </svg>
           {query && (
@@ -147,25 +161,25 @@ export default function StopSearch({
       )}
 
       {/* Dropdown Results */}
-      {!selectedStop && isOpen && results.length > 0 && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[60vh] lg:max-h-80 overflow-y-auto">
-          {results.map((stop) => (
+      {!selectedRoute && isOpen && results.length > 0 && (
+        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto">
+          {results.map((route) => (
             <button
-              key={stop.id}
-              onClick={() => handleSelect(stop)}
+              key={route.id}
+              onClick={() => handleSelect(route)}
               className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{stop.name_en}</p>
-                  <p className="text-sm text-gray-500">{stop.name_mm}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {stop.township_en} • {stop.road_en}
-                  </p>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded flex items-center justify-center font-bold text-white flex-shrink-0"
+                  style={{ backgroundColor: route.color }}
+                >
+                  {route.id}
                 </div>
-                <span className="ml-2 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
-                  {stop.route_count} လမ်းကြောင်းများ
-                </span>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{route.name}</p>
+                  <p className="text-sm text-gray-500">{route.stopCount} မှတ်တိုင်</p>
+                </div>
               </div>
             </button>
           ))}
@@ -173,9 +187,9 @@ export default function StopSearch({
       )}
 
       {/* No results */}
-      {!selectedStop && isOpen && query.length >= 2 && results.length === 0 && (
+      {!selectedRoute && isOpen && query.length >= 1 && results.length === 0 && (
         <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-4 text-center text-gray-500">
-          "{query}" အတွက် မှတ်တိုင်မတွေ့ရှိပါ
+          "{query}" အတွက် လမ်းကြောင်းမတွေ့ရှိပါ
         </div>
       )}
     </div>

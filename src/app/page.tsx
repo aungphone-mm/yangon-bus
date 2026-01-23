@@ -7,6 +7,7 @@ import { useFavorites } from '@/lib/useFavorites';
 import StopSearch from '@/components/StopSearch';
 import StopDetail from '@/components/StopDetail';
 import RoutePlanner from '@/components/RoutePlanner';
+import RouteSearch from '@/components/RouteSearch';
 
 // Dynamic import for map (avoid SSR issues with Leaflet)
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -262,7 +263,7 @@ export default function Home() {
             </div>
             <div className="text-right text-sm">
               <p className="font-medium">{stopLookup.metadata.total_stops} မှတ်တိုင်</p>
-              <p className="text-white/70">{graph.metadata.total_nodes} ချိုက်ဆက်ထားသော</p>
+              <p className="text-white/70">{graph.metadata.total_nodes} ချိတ်ဆက်ထားသော</p>
             </div>
           </div>
         </div>
@@ -276,7 +277,7 @@ export default function Home() {
               { id: 'search' as Tab, label: 'ရှာဖွေရန်', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
               { id: 'planner' as Tab, label: 'လမ်းကြောင်းစီမံ', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
               { id: 'favorites' as Tab, label: 'အနှစ်သက်ဆုံး', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
-              { id: 'hubs' as Tab, label: 'အဓိကလဲရာနေရာများ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
+              { id: 'hubs' as Tab, label: 'လမ်းဆုံမှတ်တိုင်များ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
               { id: 'all-routes' as Tab, label: 'လမ်းကြောင်းအားလုံး', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
             ].map((tab) => (
               <button
@@ -326,25 +327,15 @@ export default function Home() {
 
                   <div className="pt-4 border-t border-gray-200">
                     <h2 className="text-lg font-semibold text-gray-800 mb-3">ဘတ်စ်လမ်းကြောင်းရှာရန်</h2>
-                    <input
-                      type="text"
-                      placeholder="လမ်းကြောင်းနံပါတ်ဖြင့်ရှာရန် (ဥပမာ 61, 78, YBS-1)..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      onChange={(e) => {
-                        const searchTerm = e.target.value.toLowerCase().trim();
-                        if (searchTerm === '') {
-                          setSelectedRouteId(null);
-                          return;
-                        }
-                        // Find matching route
-                        const matchingRoute = allRoutesArray.find(route =>
-                          route.id.toLowerCase().includes(searchTerm) ||
-                          route.name.toLowerCase().includes(searchTerm)
-                        );
-                        if (matchingRoute) {
-                          setSelectedRouteId(matchingRoute.id);
-                        }
+                    <RouteSearch
+                      stopLookup={stopLookup}
+                      onSelectRoute={(routeId) => {
+                        setSelectedRouteId(routeId);
+                        setSelectedStop(null);
+                        setShowStopDetail(false);
                       }}
+                      onClearRoute={() => setSelectedRouteId(null)}
+                      selectedRouteId={selectedRouteId}
                     />
                   </div>
 
@@ -532,7 +523,7 @@ export default function Home() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       </svg>
-                      အဓိကလဲစီးရာနေရာများ
+                      လမ်းဆုံမှတ်တိုင်များ
                     </h2>
                     <p className="text-sm text-white/80 mt-1">
                       အများဆုံးဘတ်စ်လမ်းကြောင်းရှိသောမှတ်တိုင်များ
