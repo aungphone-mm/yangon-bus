@@ -20,11 +20,11 @@ export default function StopDetail({
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-primary text-white p-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h2 className="text-xl font-bold">{stop.name_en}</h2>
-            <p className="text-white/80 text-lg">{stop.name_mm}</p>
+      <div className="bg-primary text-white p-3 sm:p-4">
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold truncate">{stop.name_en}</h2>
+            <p className="text-white/80 text-base sm:text-lg truncate">{stop.name_mm}</p>
           </div>
           <div className="flex items-center gap-2">
             {/* Favorite Button */}
@@ -90,21 +90,21 @@ export default function StopDetail({
       </div>
 
       {/* Routes */}
-      <div className="p-4">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      <div className="p-3 sm:p-4">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           ဤမှတ်တိုင်ရှိ လမ်းကြောင်းများ ({stop.route_count})
         </h3>
 
-        <div className="space-y-2 max-h-80 overflow-y-auto">
+        <div className="space-y-2 max-h-[40vh] sm:max-h-80 overflow-y-auto scrollbar-visible">
           {stop.routes.map((route) => (
             <button
               key={`${route.id}-${route.position}`}
               onClick={() => onRouteClick?.(route.id)}
-              className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+              className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors text-left"
             >
               {/* Route Color Badge */}
               <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm shrink-0"
                 style={{ backgroundColor: `#${route.color}` }}
               >
                 {route.id.length <= 3 ? route.id : route.id.substring(0, 2)}
@@ -112,24 +112,24 @@ export default function StopDetail({
 
               {/* Route Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">
+                <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
                   လမ်းကြောင်း {route.id}
                 </p>
-                <p className="text-sm text-gray-500 truncate">
+                <p className="text-xs sm:text-sm text-gray-500 truncate">
                   {route.name}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-[10px] sm:text-xs text-gray-400 truncate">
                   {route.agency}
                   {route.position !== 'middle' && (
-                    <span className="ml-2 text-primary font-medium">
-                      {route.position === 'start' ? 'ဤနေရာမှစတင်သည်' : 'ဤနေရာတွင်ဆုံးသည်'}
+                    <span className="ml-1 sm:ml-2 text-primary font-medium">
+                      {route.position === 'start' ? 'စတင်' : 'ဆုံး'}
                     </span>
                   )}
                 </p>
               </div>
 
               {/* Arrow */}
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>

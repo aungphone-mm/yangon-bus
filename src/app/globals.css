@@ -52,6 +52,24 @@ body {
   background: #475569;
 }
 
+/* Thin scrollbar for horizontal navigation */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* Leaflet marker fix */
 .custom-marker {
   background: transparent !important;
@@ -72,5 +90,27 @@ body {
 @media (max-width: 640px) {
   .leaflet-container {
     touch-action: pan-x pan-y;
+  }
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 1024px) {
+  button, a {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Prevent text size adjustment on mobile */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Smooth scrolling for better UX */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }

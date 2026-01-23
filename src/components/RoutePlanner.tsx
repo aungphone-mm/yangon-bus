@@ -99,9 +99,9 @@ export default function RoutePlanner({
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-visible">
       {/* Header */}
-      <div className="bg-secondary text-white p-4 rounded-t-lg">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-secondary text-white p-3 sm:p-4 rounded-t-lg">
+        <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
           လမ်းကြောင်းစီစဉ်ရေး
@@ -109,7 +109,7 @@ export default function RoutePlanner({
       </div>
 
       {/* Input Section */}
-      <div className="p-4 space-y-3">
+      <div className="p-3 sm:p-4 space-y-3">
         {/* Origin */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -205,27 +205,27 @@ export default function RoutePlanner({
               )}
 
               {/* Summary */}
-              <div className="p-4 bg-green-50">
+              <div className="p-3 sm:p-4 bg-green-50">
                 <div className="flex items-center gap-2 text-green-800">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="font-medium">လမ်းကြောင်းတွေ့ပြီ!</span>
+                  <span className="font-medium text-sm sm:text-base">လမ်းကြောင်းတွေ့ပြီ!</span>
                 </div>
-                <div className="mt-2 grid grid-cols-3 gap-4 text-center">
+                <div className="mt-2 grid grid-cols-3 gap-2 sm:gap-4 text-center">
                   <div>
-                    <p className="text-2xl font-bold text-green-800">{result.totalStops}</p>
-                    <p className="text-xs text-green-600">မှတ်တိုင်</p>
+                    <p className="text-xl sm:text-2xl font-bold text-green-800">{result.totalStops}</p>
+                    <p className="text-[10px] sm:text-xs text-green-600">မှတ်တိုင်</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-green-800">
+                    <p className="text-xl sm:text-2xl font-bold text-green-800">
                       {(result.totalDistance / 1000).toFixed(1)}
                     </p>
-                    <p className="text-xs text-green-600">ကီလိုမီတာ</p>
+                    <p className="text-[10px] sm:text-xs text-green-600">ကီလိုမီတာ</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-green-800">{result.transfers}</p>
-                    <p className="text-xs text-green-600">ပြောင်းလဲစီးခြင်း</p>
+                    <p className="text-xl sm:text-2xl font-bold text-green-800">{result.transfers}</p>
+                    <p className="text-[10px] sm:text-xs text-green-600">ပြောင်းလဲစီးခြင်း</p>
                   </div>
                 </div>
                 {result.suggestedRoute && (
@@ -257,7 +257,7 @@ export default function RoutePlanner({
               </div>
 
               {/* Step by step */}
-              <div className="p-4 max-h-80 overflow-y-auto">
+              <div className="p-3 sm:p-4 max-h-[40vh] sm:max-h-80 overflow-y-auto scrollbar-visible">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
                   ခရီးစဉ်အသေးစိတ်
                 </h3>

@@ -162,23 +162,23 @@ export default function RouteSearch({
 
       {/* Dropdown Results */}
       {!selectedRoute && isOpen && results.length > 0 && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto">
+        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[40vh] sm:max-h-80 overflow-y-auto">
           {results.map((route) => (
             <button
               key={route.id}
               onClick={() => handleSelect(route)}
-              className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-left hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100 last:border-b-0 transition-colors"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div
-                  className="w-10 h-10 rounded flex items-center justify-center font-bold text-white flex-shrink-0"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded flex items-center justify-center font-bold text-white flex-shrink-0 text-xs sm:text-sm"
                   style={{ backgroundColor: route.color }}
                 >
                   {route.id}
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{route.name}</p>
-                  <p className="text-sm text-gray-500">{route.stopCount} မှတ်တိုင်</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{route.name}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">{route.stopCount} မှတ်တိုင်</p>
                 </div>
               </div>
             </button>

@@ -258,35 +258,34 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-primary text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <svg className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
-              <div>
-                <h1 className="text-xl font-bold">YBS</h1>
-                {/* <p className="text-xs text-white/70">သင်၏လမ်းကြောင်းကိုရှာပါ</p> */}
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold">YBS</h1>
               </div>
             </div>
-            <div className="text-right text-sm">
-              <p className="font-medium">{stopLookup.metadata.total_stops} မှတ်တိုင်</p>
-              <p className="text-white/70">{graph.metadata.total_nodes} ချိတ်ဆက်ထားသော</p>
+            <div className="text-right text-xs sm:text-sm flex-shrink-0">
+              <p className="font-medium whitespace-nowrap">{stopLookup.metadata.total_stops} မှတ်တိုင်</p>
+              <p className="text-white/70 whitespace-nowrap hidden xs:block">{graph.metadata.total_nodes} ချိတ်ဆက်</p>
             </div>
           </div>
         </div>
       </header>
 
       {/* Tab Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-1 overflow-x-auto">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+          <div className="flex gap-1 overflow-x-auto scrollbar-thin hover:scrollbar-visible snap-x snap-mandatory scroll-smooth">
             {[
-              { id: 'search' as Tab, label: 'ရှာဖွေရန်', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
-              { id: 'planner' as Tab, label: 'လမ်းကြောင်းစီမံ', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
-              { id: 'favorites' as Tab, label: 'အနှစ်သက်ဆုံး', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
-              { id: 'hubs' as Tab, label: 'လမ်းဆုံမှတ်တိုင်များ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
-              { id: 'all-routes' as Tab, label: 'လမ်းကြောင်းအားလုံး', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
+              { id: 'search' as Tab, label: 'ရှာဖွေရန်', shortLabel: 'ရှာ', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+              { id: 'planner' as Tab, label: 'လမ်းကြောင်းစီမံ', shortLabel: 'စီမံ', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
+              { id: 'favorites' as Tab, label: 'အနှစ်သက်ဆုံး', shortLabel: 'အကြိုက်', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
+              { id: 'hubs' as Tab, label: 'လမ်းဆုံမှတ်တိုင်များ', shortLabel: 'လမ်းဆုံ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
+              { id: 'all-routes' as Tab, label: 'လမ်းကြောင်းအားလုံး', shortLabel: 'အားလုံး', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -294,18 +293,19 @@ export default function Home() {
                   setActiveTab(tab.id);
                   setShowStopDetail(false);
                 }}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap snap-start ${
                   activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-primary text-primary bg-primary/5'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <svg className="w-4 h-4" fill={tab.id === 'favorites' && favoriteCount > 0 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 flex-shrink-0" fill={tab.id === 'favorites' && favoriteCount > 0 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
                 </svg>
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.shortLabel}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-white rounded-full">
+                  <span className="px-1.5 py-0.5 text-xs bg-primary text-white rounded-full min-w-[1.25rem] text-center">
                     {tab.badge}
                   </span>
                 )}
@@ -316,8 +316,8 @@ export default function Home() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-2 gap-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Left Panel */}
           <div className="space-y-4">
             {/* Search Tab */}
@@ -351,17 +351,17 @@ export default function Home() {
                   {selectedRouteId && !selectedStop && (
                     <div className="pt-4 border-t border-gray-200">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-md font-semibold text-gray-800">
+                        <h3 className="text-sm sm:text-md font-semibold text-gray-800">
                           လမ်းကြောင်း {selectedRouteId} မှတ်တိုင်များ
                         </h3>
                         <button
                           onClick={() => setSelectedRouteId(null)}
-                          className="text-sm text-gray-500 hover:text-gray-700"
+                          className="text-xs sm:text-sm text-gray-500 hover:text-gray-700"
                         >
                           ရှင်းလင်းရန်
                         </button>
                       </div>
-                      <div className="max-h-[400px] overflow-y-auto space-y-2 scrollbar-visible">
+                      <div className="max-h-[40vh] sm:max-h-[400px] overflow-y-auto space-y-2 scrollbar-visible">
                         {filteredRouteStops.map((stop: Stop) => (
                           <button
                             key={stop.id}
@@ -468,7 +468,7 @@ export default function Home() {
                       </button>
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
+                    <div className="divide-y divide-gray-100 max-h-[50vh] sm:max-h-[500px] overflow-y-auto scrollbar-visible">
                       {favorites.map((fav) => {
                         const stop = stopLookup.stops[fav.id];
                         if (!stop) return null;
@@ -538,7 +538,7 @@ export default function Home() {
                       အများဆုံးဘတ်စ်လမ်းကြောင်းရှိသောမှတ်တိုင်များ
                     </p>
                   </div>
-                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
+                  <div className="divide-y divide-gray-100 max-h-[50vh] sm:max-h-[500px] overflow-y-auto scrollbar-visible">
                     {stopLookup.hubs.slice(0, 30).map((hub, index) => {
                       const stop = stopLookup.stops[hub.stop_id];
                       if (!stop) return null;
@@ -624,7 +624,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
+                  <div className="divide-y divide-gray-100 max-h-[50vh] sm:max-h-[500px] overflow-y-auto scrollbar-visible">
                     {!selectedRouteId ? (
                       // Show all routes list
                       allRoutesArray.map((route) => (
@@ -696,7 +696,7 @@ export default function Home() {
           </div>
 
           {/* Right Panel - Map */}
-          <div className="lg:sticky lg:top-20 h-[500px] lg:h-[calc(100vh-120px)]">
+          <div className="lg:sticky lg:top-20 h-[50vh] min-h-[400px] sm:h-[60vh] lg:h-[calc(100vh-120px)]">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full">
               <MapView
                 stops={mapViewStops}
@@ -714,13 +714,13 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          <div className="flex items-center justify-center gap-3 mb-2">
+      <footer className="bg-gray-800 text-white py-4 sm:py-6 mt-8 sm:mt-12">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center text-xs sm:text-sm">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
             <img
               src="/logo.png"
               alt="Profile"
-              className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-600"
+              className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover ring-2 ring-gray-600"
               onError={(e) => {
                 // Hide image if it doesn't exist
                 e.currentTarget.style.display = 'none';

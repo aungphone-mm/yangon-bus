@@ -148,23 +148,23 @@ export default function StopSearch({
 
       {/* Dropdown Results */}
       {!selectedStop && isOpen && results.length > 0 && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[60vh] lg:max-h-80 overflow-y-auto">
+        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[50vh] sm:max-h-[60vh] lg:max-h-80 overflow-y-auto">
           {results.map((stop) => (
             <button
               key={stop.id}
               onClick={() => handleSelect(stop)}
-              className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-left hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100 last:border-b-0 transition-colors"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{stop.name_en}</p>
-                  <p className="text-sm text-gray-500">{stop.name_mm}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{stop.name_en}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">{stop.name_mm}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1 truncate">
                     {stop.township_en} • {stop.road_en}
                   </p>
                 </div>
-                <span className="ml-2 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
-                  {stop.route_count} လမ်းကြောင်းများ
+                <span className="flex-shrink-0 px-2 py-1 text-[10px] sm:text-xs font-medium text-primary bg-primary/10 rounded-full whitespace-nowrap">
+                  {stop.route_count}
                 </span>
               </div>
             </button>

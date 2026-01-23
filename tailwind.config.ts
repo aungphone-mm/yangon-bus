@@ -13,6 +13,9 @@ const config: Config = {
         secondary: '#2C8A6C',
         accent: '#DF504E',
       },
+      screens: {
+        'xs': '475px',
+      },
     },
   },
   plugins: [],

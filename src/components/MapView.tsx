@@ -377,59 +377,69 @@ export default function MapView({
 
       {/* Mobile Map Lock/Unlock Button */}
       {isMobile && (
-        <button
-          onClick={() => setIsMapLocked(!isMapLocked)}
-          className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 z-[1000] hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          aria-label={isMapLocked ? "မြေပုံသော့ဖွင့်ရန်" : "မြေပုံသော့ခတ်ရန်"}
-        >
-          {isMapLocked ? (
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-            </svg>
+        <div className="absolute top-3 right-3 z-[1000]">
+          <button
+            onClick={() => setIsMapLocked(!isMapLocked)}
+            className={`bg-white rounded-lg shadow-lg p-2.5 hover:bg-gray-50 active:bg-gray-100 transition-all ${
+              !isMapLocked ? 'ring-2 ring-green-500' : ''
+            }`}
+            aria-label={isMapLocked ? "မြေပုံသော့ဖွင့်ရန်" : "မြေပုံသော့ခတ်ရန်"}
+            title={isMapLocked ? "မြေပုံကိုရွှေ့လျားကြည့်ရန် သော့ဖွင့်ပါ" : "မြေပုံကိုသော့ခတ်ပါ"}
+          >
+            {isMapLocked ? (
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+            )}
+          </button>
+          {isMapLocked && (
+            <div className="mt-1 bg-gray-900/90 text-white text-[10px] px-2 py-1 rounded text-center whitespace-nowrap">
+              သော့ခတ်ထားသည်
+            </div>
           )}
-        </button>
+        </div>
       )}
 
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs z-[1000]">
+      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 text-[10px] sm:text-xs z-[1000] max-w-[calc(100%-6rem)]">
         {(originStop || destinationStop) ? (
           <>
             {originStop && (
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">A</div>
-                <span>စတင်ရာ</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-[10px]">A</div>
+                <span className="truncate">စတင်ရာ</span>
               </div>
             )}
             {transferPoints.length > 0 && (
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">⇄</div>
-                <span>ပြောင်းလဲစီးရာ</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-[10px]">⇄</div>
+                <span className="truncate">ပြောင်းလဲစီးရာ</span>
               </div>
             )}
             {destinationStop && (
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">B</div>
-                <span>ရောက်ရာ</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-[10px]">B</div>
+                <span className="truncate">ရောက်ရာ</span>
               </div>
             )}
           </>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-4 h-4 bg-yellow-400 rounded-full border border-yellow-600"></div>
-              <span>အချက်အချာ (5+ လမ်းကြောင်း)</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-yellow-400 rounded-full border border-yellow-600 flex-shrink-0"></div>
+              <span className="truncate">အချက်အချာ</span>
             </div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-4 h-4 bg-white rounded-full border-2 border-primary"></div>
-              <span>ဘတ်စ်မှတ်တိုင်</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white rounded-full border-2 border-primary flex-shrink-0"></div>
+              <span className="truncate">မှတ်တိုင်</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-primary rounded-full"></div>
-              <span>ရွေးချယ်ထားသော</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-primary rounded-full flex-shrink-0"></div>
+              <span className="truncate">ရွေးချယ်</span>
             </div>
           </>
         )}
