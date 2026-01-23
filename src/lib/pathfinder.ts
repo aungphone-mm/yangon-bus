@@ -3,6 +3,7 @@ import { PlannerGraph, PathResult, PathSegment, GraphEdge } from '@/types/transi
 // Algorithm constants
 const TRANSFER_PENALTY = 100;
 const STOP_COST = 1;
+const AVOID_PENALTY = 2000;
 
 // Priority Queue Implementation
 interface PriorityQueueItem<T> {
@@ -398,7 +399,8 @@ function countTransfers(segments: PathSegment[], suggestedRoute: string | null):
 function findPathWithTransferOptimization(
   graph: PlannerGraph,
   startId: number,
-  endId: number
+  endId: number,
+  avoidSegments: Set<string> = new Set()
 ): PathResult {
   // Edge cases
   if (startId === endId) {
@@ -470,7 +472,11 @@ function findPathWithTransferOptimization(
         const isTransfer = state.currentRoute !== null && state.currentRoute !== routeOption;
         const newTransfers = state.transfers + (isTransfer ? 1 : 0);
         const newStops = state.stops + 1;
-        const newCost = (newTransfers * TRANSFER_PENALTY) + (newStops * STOP_COST);
+        
+        // Apply penalty if this segment is in the avoid list
+        const segmentKey = `${state.stopId}:${edge.to}:${routeOption}`;
+        const penalty = avoidSegments.has(segmentKey) ? AVOID_PENALTY : 0;
+        const newCost = (newTransfers * TRANSFER_PENALTY) + (newStops * STOP_COST) + penalty;
 
         const neighborStateKey = `${edge.to}:${routeOption}`;
 
@@ -523,8 +529,38 @@ export function findPathWithTransfers(
   graph: PlannerGraph,
   startId: number,
   endId: number
-): PathResult {
-  return findPathWithTransferOptimization(graph, startId, endId);
+): PathResult[] {
+  const results: PathResult[] = [];
+  const avoidSegments = new Set<string>();
+  const maxRoutes = 3;
+
+  for (let i = 0; i < maxRoutes; i++) {
+    const result = findPathWithTransferOptimization(graph, startId, endId, avoidSegments);
+    
+    if (!result.found) {
+      if (i === 0) results.push(result);
+      break;
+    }
+
+    // Check for duplicates
+    const pathKey = result.segments.map(s => `${s.from}:${s.to}:${s.routeUsed}`).join('|');
+    const isDuplicate = results.some(r => r.segments.map(s => `${s.from}:${s.to}:${s.routeUsed}`).join('|') === pathKey);
+
+    if (!isDuplicate) {
+      results.push(result);
+      
+      // Add segments to avoid set
+      for (const segment of result.segments) {
+        if (segment.routeUsed) {
+          avoidSegments.add(`${segment.from}:${segment.to}:${segment.routeUsed}`);
+        }
+      }
+    } else {
+      break;
+    }
+  }
+
+  return results;
 }
 
 /**

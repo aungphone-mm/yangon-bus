@@ -76,6 +76,14 @@ This approach accurately represents the network without assumptions about route 
 - StopDetail component accepts `onRouteClick` callback for route selection
 - "Show All" button resets filter by setting `selectedRouteId` to null
 
+**Route Search Component**:
+- `RouteSearch.tsx` provides autocomplete search for route filtering
+- Shows selected route as a badge with color indicator and stop count
+- Dropdown displays route ID badge (colored), name, and stop count
+- Searches with minimum 1 character, shows up to 10 results
+- Uses `onSelectRoute` callback to set selected route ID in parent
+- Clear button resets selection and calls `onClearRoute` callback
+
 ### MapView Component & Leaflet Integration
 
 **Critical**: MapView (`src/components/MapView.tsx`) is dynamically imported with `ssr: false` to avoid Leaflet SSR issues.
@@ -109,6 +117,21 @@ State flows unidirectionally from page.tsx to components:
 - MapView is purely presentational - it receives stops, routes, paths but doesn't manage them
 - Favorites are managed by custom hook `useFavorites` using LocalStorage
 
+### Component Structure
+
+**Main Components** (all in `src/components/`):
+- **StopSearch**: Autocomplete search for stops using Fuse.js, emits `onSelect` callback
+- **StopDetail**: Displays stop info with routes list, accepts `onRouteClick` for route filtering
+- **RoutePlanner**: Journey planning UI with origin/destination pickers, emits path results
+- **RouteSearch**: Autocomplete search for routes, shows selected route as badge
+- **MapView**: Leaflet map display, dynamically imported with `ssr: false`
+
+**Key Props Pattern**:
+- All components receive `stopLookup` for data access
+- Planner components also receive `graph` for pathfinding
+- Selection callbacks flow up: `onSelect`, `onRouteClick`, `onPathFound`, etc.
+- MapView receives preprocessed data: `stops[]`, `allRoutes[]`, `currentPath`, `transferPoints[]`
+
 ### Pathfinding Algorithms
 
 The app implements two pathfinding approaches in `src/lib/pathfinder.ts`:
@@ -139,12 +162,25 @@ The app implements two pathfinding approaches in `src/lib/pathfinder.ts`:
 
 ### Search Implementation
 
-Uses Fuse.js with weighted field matching:
-- `name_en`, `name_mm`: weight 1.0 (highest priority)
-- `township_en`, `road_en`: weight 0.7
-- Threshold: 0.4 for fuzzy matching balance
+The app has two separate search systems in `src/lib/search.ts`:
 
-Search logic is in `src/lib/search.ts`.
+#### 1. Stop Search (`searchStops()`)
+Uses Fuse.js with weighted field matching:
+- `name_mm`: weight 2.5 (highest priority for Burmese names)
+- `name_en`: weight 1.5
+- `road_mm`: weight 1.0
+- `township_en`: weight 1.0
+- `road_en`: weight 0.5
+- Threshold: 0.5, ignoreLocation: true for better fuzzy matching
+
+#### 2. Route Search (`searchRoutes()`)
+Separate Fuse.js instance for route autocomplete:
+- `id`: weight 2 (route number like "61", "YBS-1")
+- `name`: weight 1 (route name like "Hledan-Sule")
+- Threshold: 0.3 for stricter matching
+- Used by RouteSearch component in "All Routes" tab
+
+**Pattern**: Initialize both search indexes once when stopLookup loads (`initializeSearch()` and `initializeRouteSearch()`). Search functions return empty array if called before initialization.
 
 ## TypeScript Types
 
@@ -165,6 +201,10 @@ All transit data types are in `src/types/transit.ts`:
 - **Colors**: Primary (#405CAA), Secondary (#2C8A6C), Accent (#DF504E)
 - **Responsive**: Mobile-first design with lg: breakpoint for desktop layout
 - **Icons**: Inline SVG paths from Heroicons
+- **Language**: All UI text is in Burmese (Myanmar) by default
+  - Stop names: `name_mm` (Burmese) and `name_en` (English)
+  - Search prioritizes Burmese text with higher weight (2.5 vs 1.5)
+  - Buttons, labels, placeholders all use Burmese text
 
 ### Custom Scrollbar Styling
 
@@ -210,6 +250,11 @@ To update transit data:
 
 ## Deployment
 
-- **Vercel**: Auto-detects Next.js, zero config
-- **Cloudflare Pages**: Build first, deploy `out/` directory
-- The app is a static export (no server-side rendering)
+The app uses Next.js static export mode (`output: 'export'` in `next.config.js`):
+- No server-side rendering or API routes
+- Builds to static HTML/CSS/JS in `out/` directory
+- Images are unoptimized (no Next.js image optimization)
+
+Deployment options:
+- **Vercel**: Auto-detects Next.js, zero config, deploys directly from git
+- **Cloudflare Pages**: Run `npm run build` first, then deploy `out/` directory

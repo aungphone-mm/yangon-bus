@@ -8,7 +8,8 @@ import StopSearch from './StopSearch';
 interface RoutePlannerProps {
   stopLookup: StopLookup;
   graph: PlannerGraph;
-  onPathFound?: (path: PathResult) => void;
+  onPathFound?: (paths: PathResult[]) => void;
+  onRouteSelected?: (path: PathResult) => void;
   onOriginChange?: (stop: Stop | null) => void;
   onDestinationChange?: (stop: Stop | null) => void;
 }
@@ -17,12 +18,14 @@ export default function RoutePlanner({
   stopLookup,
   graph,
   onPathFound,
+  onRouteSelected,
   onOriginChange,
   onDestinationChange,
 }: RoutePlannerProps) {
   const [origin, setOrigin] = useState<Stop | null>(null);
   const [destination, setDestination] = useState<Stop | null>(null);
-  const [result, setResult] = useState<PathResult | null>(null);
+  const [results, setResults] = useState<PathResult[] | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,14 +53,15 @@ export default function RoutePlanner({
       const timeoutId = setTimeout(() => {
         try {
           console.log('Finding path from', origin.id, 'to', destination.id);
-          const pathResult = findPathWithTransfers(graph, origin.id, destination.id);
-          console.log('Path result:', pathResult);
-          setResult(pathResult);
-          onPathFoundRef.current?.(pathResult);
+          const pathResults = findPathWithTransfers(graph, origin.id, destination.id);
+          console.log('Path results:', pathResults);
+          setResults(pathResults);
+          setSelectedIndex(0);
+          onPathFoundRef.current?.(pathResults);
         } catch (err) {
           console.error('Pathfinding error:', err);
           setError('လမ်းကြောင်းရှာရာတွင်အမှားရှိသည်။ ထပ်စမ်းကြည့်ပါ။');
-          setResult(null);
+          setResults(null);
         } finally {
           setIsSearching(false);
         }
@@ -65,7 +69,7 @@ export default function RoutePlanner({
 
       return () => clearTimeout(timeoutId);
     } else {
-      setResult(null);
+      setResults(null);
       setError(null);
     }
   }, [origin, destination, graph]);
@@ -79,9 +83,18 @@ export default function RoutePlanner({
   const handleClear = () => {
     setOrigin(null);
     setDestination(null);
-    setResult(null);
+    setResults(null);
     setError(null);
   };
+
+  const handleRouteSelect = (index: number) => {
+    setSelectedIndex(index);
+    if (results && results[index]) {
+      onRouteSelected?.(results[index]);
+    }
+  };
+
+  const result = results ? results[selectedIndex] : null;
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-visible">
@@ -165,10 +178,32 @@ export default function RoutePlanner({
       )}
 
       {/* Results */}
-      {result && !isSearching && !error && (
+      {results && !isSearching && !error && (
         <div className="border-t border-gray-100">
-          {result.found ? (
+          {result && result.found ? (
             <>
+              {/* Route Tabs */}
+              {results.length > 1 && (
+                <div className="flex border-b border-gray-100 overflow-x-auto">
+                  {results.map((r, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleRouteSelect(idx)}
+                      className={`flex-1 py-3 px-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                        selectedIndex === idx
+                          ? 'border-primary text-primary bg-primary/5'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      လမ်းကြောင်း {idx + 1}
+                      <span className="ml-2 text-xs font-normal text-gray-400">
+                        ({r.totalStops} မှတ်တိုင်)
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Summary */}
               <div className="p-4 bg-green-50">
                 <div className="flex items-center gap-2 text-green-800">

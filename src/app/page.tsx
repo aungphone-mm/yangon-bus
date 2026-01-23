@@ -137,7 +137,15 @@ export default function Home() {
     setShowStopDetail(true);
   }, []);
 
-  const handlePathFound = useCallback((path: PathResult) => {
+  const handlePathFound = useCallback((paths: PathResult[]) => {
+    if (paths.length > 0) {
+      setCurrentPath(paths[0]);
+    } else {
+      setCurrentPath(null);
+    }
+  }, []);
+
+  const handleRouteSelected = useCallback((path: PathResult) => {
     setCurrentPath(path);
   }, []);
 
@@ -257,8 +265,8 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
               <div>
-                <h1 className="text-xl font-bold">ရန်ကုန်ဘတ်စ်ကား</h1>
-                <p className="text-xs text-white/70">သင်၏လမ်းကြောင်းကိုရှာပါ</p>
+                <h1 className="text-xl font-bold">YBS</h1>
+                {/* <p className="text-xs text-white/70">သင်၏လမ်းကြောင်းကိုရှာပါ</p> */}
               </div>
             </div>
             <div className="text-right text-sm">
@@ -406,6 +414,7 @@ export default function Home() {
                   stopLookup={stopLookup}
                   graph={graph}
                   onPathFound={handlePathFound}
+                  onRouteSelected={handleRouteSelected}
                   onOriginChange={setPlannerOrigin}
                   onDestinationChange={setPlannerDestination}
                 />

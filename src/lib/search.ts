@@ -47,13 +47,30 @@ export function searchStops(query: string, limit: number = 10): SearchResult[] {
     return [];
   }
 
-  const results = fuseInstance.search(query, { limit });
+  // Search with higher limit to account for potential duplicates
+  const results = fuseInstance.search(query, { limit: limit * 3 });
 
-  return results.map(result => ({
-    stop: result.item,
-    score: result.score || 0,
-    matchedField: result.matches?.[0]?.key || 'name_en',
-  }));
+  // Deduplicate by stop ID (keep best score for each stop)
+  const seenIds = new Set<number>();
+  const uniqueResults: SearchResult[] = [];
+
+  for (const result of results) {
+    if (!seenIds.has(result.item.id)) {
+      seenIds.add(result.item.id);
+      uniqueResults.push({
+        stop: result.item,
+        score: result.score || 0,
+        matchedField: result.matches?.[0]?.key || 'name_en',
+      });
+
+      // Stop once we have enough unique results
+      if (uniqueResults.length >= limit) {
+        break;
+      }
+    }
+  }
+
+  return uniqueResults;
 }
 
 /**
@@ -188,7 +205,24 @@ export function searchRoutes(query: string, limit: number = 10): RouteSearchResu
     return [];
   }
 
-  const results = routeFuseInstance.search(query, { limit });
+  // Search with higher limit to account for potential duplicates
+  const results = routeFuseInstance.search(query, { limit: limit * 2 });
 
-  return results.map(result => result.item);
+  // Deduplicate by route ID (keep best score for each route)
+  const seenIds = new Set<string>();
+  const uniqueResults: RouteSearchResult[] = [];
+
+  for (const result of results) {
+    if (!seenIds.has(result.item.id)) {
+      seenIds.add(result.item.id);
+      uniqueResults.push(result.item);
+
+      // Stop once we have enough unique results
+      if (uniqueResults.length >= limit) {
+        break;
+      }
+    }
+  }
+
+  return uniqueResults;
 }
