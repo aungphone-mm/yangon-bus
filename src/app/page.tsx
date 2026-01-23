@@ -13,7 +13,7 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full min-h-[400px] bg-gray-100 animate-pulse flex items-center justify-center">
-      <span className="text-gray-400">Loading map...</span>
+      <span className="text-gray-400">မြေပုံတင်နေသည်...</span>
     </div>
   ),
 });
@@ -219,7 +219,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading Yangon Bus data...</p>
+          <p className="mt-4 text-gray-600">ရန်ကုန်ဘတ်စ်အချက်အလက်တင်နေသည်...</p>
         </div>
       </div>
     );
@@ -232,13 +232,13 @@ export default function Home() {
           <svg className="w-16 h-16 text-red-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <h2 className="mt-4 text-xl font-semibold text-gray-800">Failed to Load Data</h2>
-          <p className="mt-2 text-gray-600">{error || 'Please check your data files and try again.'}</p>
+          <h2 className="mt-4 text-xl font-semibold text-gray-800">အချက်အလက်တင်ရန်မအောင်မြင်ပါ</h2>
+          <p className="mt-2 text-gray-600">{error || 'သင်၏ဒေတာဖိုင်များကိုစစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။'}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
           >
-            Retry
+            ထပ်စမ်းရန်
           </button>
         </div>
       </div>
@@ -256,13 +256,13 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
               <div>
-                <h1 className="text-xl font-bold">Yangon Bus</h1>
-                <p className="text-xs text-white/70">Find your route</p>
+                <h1 className="text-xl font-bold">ရန်ကုန်ဘတ်စ်ကား</h1>
+                <p className="text-xs text-white/70">သင်၏လမ်းကြောင်းကိုရှာပါ</p>
               </div>
             </div>
             <div className="text-right text-sm">
-              <p className="font-medium">{stopLookup.metadata.total_stops} stops</p>
-              <p className="text-white/70">{graph.metadata.total_nodes} connected</p>
+              <p className="font-medium">{stopLookup.metadata.total_stops} မှတ်တိုင်</p>
+              <p className="text-white/70">{graph.metadata.total_nodes} ချိုက်ဆက်ထားသော</p>
             </div>
           </div>
         </div>
@@ -273,11 +273,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-1 overflow-x-auto">
             {[
-              { id: 'search' as Tab, label: 'Search', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
-              { id: 'planner' as Tab, label: 'Planner', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
-              { id: 'favorites' as Tab, label: 'Favorites', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
-              { id: 'hubs' as Tab, label: 'Hubs', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
-              { id: 'all-routes' as Tab, label: 'All Routes', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
+              { id: 'search' as Tab, label: 'ရှာဖွေရန်', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+              { id: 'planner' as Tab, label: 'လမ်းကြောင်းစီမံ', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
+              { id: 'favorites' as Tab, label: 'အနှစ်သက်ဆုံး', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
+              { id: 'hubs' as Tab, label: 'အဓိကလဲရာနေရာများ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
+              { id: 'all-routes' as Tab, label: 'လမ်းကြောင်းအားလုံး', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -316,7 +316,7 @@ export default function Home() {
               <div className="animate-fade-in">
                 <div className="bg-white rounded-lg shadow-lg p-4 space-y-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-800 mb-3">Find a Stop</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-3">မှတ်တိုင်ရှာရန်</h2>
                     <StopSearch
                       stopLookup={stopLookup}
                       onSelectStop={handleStopSelect}
@@ -325,10 +325,10 @@ export default function Home() {
                   </div>
 
                   <div className="pt-4 border-t border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-3">Find a Bus Route</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-3">ဘတ်စ်လမ်းကြောင်းရှာရန်</h2>
                     <input
                       type="text"
-                      placeholder="Search by route number (e.g., 61, 78, YBS-1)..."
+                      placeholder="လမ်းကြောင်းနံပါတ်ဖြင့်ရှာရန် (ဥပမာ 61, 78, YBS-1)..."
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       onChange={(e) => {
                         const searchTerm = e.target.value.toLowerCase().trim();
@@ -353,13 +353,13 @@ export default function Home() {
                     <div className="pt-4 border-t border-gray-200">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="text-md font-semibold text-gray-800">
-                          Route {selectedRouteId} Stops
+                          လမ်းကြောင်း {selectedRouteId} မှတ်တိုင်များ
                         </h3>
                         <button
                           onClick={() => setSelectedRouteId(null)}
                           className="text-sm text-gray-500 hover:text-gray-700"
                         >
-                          Clear
+                          ရှင်းလင်းရန်
                         </button>
                       </div>
                       <div className="max-h-[400px] overflow-y-auto space-y-2 scrollbar-visible">
@@ -431,7 +431,7 @@ export default function Home() {
                         <svg className="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
-                        My Favorite Stops
+                        ကျွန်ုပ်၏အကြိုက်ဆုံးမှတ်တိုင်များ
                       </h2>
                       {favoriteCount > 0 && (
                         <button
@@ -442,12 +442,12 @@ export default function Home() {
                           }}
                           className="text-sm text-white/80 hover:text-white transition-colors"
                         >
-                          Clear all
+                          အားလုံးရှင်းရန်
                         </button>
                       )}
                     </div>
                     <p className="text-sm text-white/80 mt-1">
-                      {favoriteCount} saved stop{favoriteCount !== 1 ? 's' : ''}
+                      {favoriteCount} သိမ်းဆည်းထားသောမှတ်တိုင်
                     </p>
                   </div>
 
@@ -456,15 +456,15 @@ export default function Home() {
                       <svg className="w-16 h-16 text-gray-200 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                       </svg>
-                      <p className="mt-4 text-gray-500">No favorite stops yet</p>
+                      <p className="mt-4 text-gray-500">အကြိုက်ဆုံးမှတ်တိုင်များမရှိသေးပါ</p>
                       <p className="text-sm text-gray-400 mt-1">
-                        Search for stops and tap the star to save them here
+                        မှတ်တိုင်များရှာပြီး ကြယ်ပွင့်ကိုနှိပ်၍ ဤနေရာတွင်သိမ်းဆည်းပါ
                       </p>
                       <button
                         onClick={() => setActiveTab('search')}
                         className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                       >
-                        Search Stops
+                        မှတ်တိုင်များရှာရန်
                       </button>
                     </div>
                   ) : (
@@ -486,7 +486,7 @@ export default function Home() {
                               <p className="text-xs text-gray-400 mt-1">{fav.township_en}</p>
                             </button>
                             <span className="px-2 py-1 bg-primary/10 text-primary rounded text-sm">
-                              {stop.route_count} routes
+                              {stop.route_count} လမ်းကြောင်းများ
                             </span>
                             <button
                               onClick={() => toggleFavorite(fav)}
@@ -532,10 +532,10 @@ export default function Home() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       </svg>
-                      Major Transfer Hubs
+                      အဓိကလဲစီးရာနေရာများ
                     </h2>
                     <p className="text-sm text-white/80 mt-1">
-                      Stops with the most bus routes
+                      အများဆုံးဘတ်စ်လမ်းကြောင်းရှိသောမှတ်တိုင်များ
                     </p>
                   </div>
                   <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto scrollbar-visible">
@@ -562,7 +562,7 @@ export default function Home() {
                               </svg>
                             )}
                             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                              {hub.route_count} routes
+                              {hub.route_count} လမ်းကြောင်းများ
                             </span>
                           </div>
                         </button>
@@ -602,10 +602,10 @@ export default function Home() {
                         </svg>
                         <div>
                           <h2 className="text-lg font-bold">
-                            {selectedRouteId ? allRoutesMap.get(selectedRouteId)?.name || 'Unknown Route' : 'All Routes'}
+                            {selectedRouteId ? allRoutesMap.get(selectedRouteId)?.name || 'Unknown Route' : 'လမ်းကြောင်းအားလုံး'}
                           </h2>
                           <p className="text-sm text-white/80">
-                            {selectedRouteId ? 'Route stops' : `${allRoutesArray.length} routes available`}
+                            {selectedRouteId ? 'လမ်းကြောင်းမှတ်တိုင်များ' : `${allRoutesArray.length} လမ်းကြောင်းများရရှိနိုင်သည်`}
                           </p>
                         </div>
                       </div>
@@ -618,7 +618,7 @@ export default function Home() {
                           }}
                           className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
                         >
-                          Show All
+                          အားလုံးပြရန်
                         </button>
                       )}
                     </div>
@@ -641,7 +641,7 @@ export default function Home() {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-gray-900">{route.name}</p>
-                            <p className="text-sm text-gray-500">{route.stopCount} stops</p>
+                            <p className="text-sm text-gray-500">{route.stopCount} မှတ်တိုင်</p>
                           </div>
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -727,12 +727,12 @@ export default function Home() {
               }}
             />
             <p className="text-gray-400">
-              Yangon Bus Transit App • Data from YRTA
+              ရန်ကုန်ဘတ်စ်ကားအက်ပ် • YRTA မှအချက်အလက်
             </p>
           </div>
           <p className="text-gray-500 mt-1">
-            {stopLookup.metadata.total_stops} stops • {graph.metadata.total_edges} connections
-            {favoriteCount > 0 && ` • ${favoriteCount} favorites`}
+            {stopLookup.metadata.total_stops} မှတ်တိုင် • {graph.metadata.total_edges} ချိတ်ဆက်မှု
+            {favoriteCount > 0 && ` • ${favoriteCount} အကြိုက်ဆုံးများ`}
           </p>
         </div>
       </footer>

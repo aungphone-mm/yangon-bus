@@ -275,7 +275,7 @@ export default function MapView({
             <strong>${stop.name_en}</strong><br>
             <span class="text-gray-500">${stop.name_mm}</span><br>
             <span class="text-sm">${stop.township_en}</span><br>
-            <span class="text-xs text-primary">${stop.route_count} routes</span>
+            <span class="text-xs text-primary">${stop.route_count} လမ်းကြောင်းများ</span>
           </div>
         `);
 
@@ -380,7 +380,7 @@ export default function MapView({
         <button
           onClick={() => setIsMapLocked(!isMapLocked)}
           className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 z-[1000] hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          aria-label={isMapLocked ? "Unlock map" : "Lock map"}
+          aria-label={isMapLocked ? "မြေပုံသော့ဖွင့်ရန်" : "မြေပုံသော့ခတ်ရန်"}
         >
           {isMapLocked ? (
             <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,19 +401,19 @@ export default function MapView({
             {originStop && (
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">A</div>
-                <span>Origin</span>
+                <span>စတင်ရာ</span>
               </div>
             )}
             {transferPoints.length > 0 && (
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">⇄</div>
-                <span>Transfer</span>
+                <span>လဲစီးရာ</span>
               </div>
             )}
             {destinationStop && (
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold">B</div>
-                <span>Destination</span>
+                <span>ရောက်ရာ</span>
               </div>
             )}
           </>
@@ -421,15 +421,15 @@ export default function MapView({
           <>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-4 h-4 bg-yellow-400 rounded-full border border-yellow-600"></div>
-              <span>Hub (5+ routes)</span>
+              <span>အချက်အချာ (5+ လမ်းကြောင်း)</span>
             </div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-4 h-4 bg-white rounded-full border-2 border-primary"></div>
-              <span>Bus Stop</span>
+              <span>ဘတ်စ်မှတ်တိုင်</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-primary rounded-full"></div>
-              <span>Selected</span>
+              <span>ရွေးချယ်ထားသော</span>
             </div>
           </>
         )}

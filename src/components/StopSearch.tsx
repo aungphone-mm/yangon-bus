@@ -100,7 +100,7 @@ export default function StopSearch({
           <button
             onClick={handleClear}
             className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded-full transition-colors"
-            title="Clear selection"
+            title="ရွေးချယ်မှုဖျက်ရန်"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -164,7 +164,7 @@ export default function StopSearch({
                   </p>
                 </div>
                 <span className="ml-2 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
-                  {stop.route_count} routes
+                  {stop.route_count} လမ်းကြောင်းများ
                 </span>
               </div>
             </button>
@@ -175,7 +175,7 @@ export default function StopSearch({
       {/* No results */}
       {!selectedStop && isOpen && query.length >= 2 && results.length === 0 && (
         <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-4 text-center text-gray-500">
-          No stops found for "{query}"
+          "{query}" အတွက် မှတ်တိုင်မတွေ့ရှိပါ
         </div>
       )}
     </div>

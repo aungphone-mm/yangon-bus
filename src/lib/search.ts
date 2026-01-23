@@ -15,12 +15,14 @@ export function initializeSearch(stopLookup: StopLookup): void {
       { name: 'name_en', weight: 2 },
       { name: 'name_mm', weight: 2 },
       { name: 'township_en', weight: 1 },
+      { name: 'township_mm', weight: 1 },
       { name: 'road_en', weight: 0.5 },
     ],
-    threshold: 0.3,
+    threshold: 0.4,
     includeScore: true,
     includeMatches: true,
-    minMatchCharLength: 2,
+    minMatchCharLength: 1,
+    ignoreLocation: true,
   });
 }
 
