@@ -15,6 +15,7 @@ interface MapViewProps {
   selectedStop?: Stop | null;
   originStop?: Stop | null;
   destinationStop?: Stop | null;
+  previewStop?: Stop | null;
   transferPoints?: Stop[];
   onStopClick?: (stop: Stop) => void;
   center?: [number, number];
@@ -26,6 +27,7 @@ export default function MapView({
   selectedStop,
   originStop = null,
   destinationStop = null,
+  previewStop = null,
   transferPoints = [],
   onStopClick,
   center = [16.8661, 96.1951], // Yangon center
@@ -212,13 +214,20 @@ export default function MapView({
       const isSelected = selectedStop?.id === stop.id;
       const isOrigin = originStop?.id === stop.id;
       const isDestination = destinationStop?.id === stop.id;
+      const isPreview = previewStop?.id === stop.id;
       const isTransfer = transferPoints.some(t => t.id === stop.id);
       const isHub = stop.is_hub;
 
       // Determine marker style
       let bgColor, borderColor, textColor, label, iconSize;
 
-      if (isOrigin) {
+      if (isPreview) {
+        bgColor = 'bg-blue-500';
+        borderColor = 'border-white';
+        textColor = 'text-white';
+        label = '?';
+        iconSize = [36, 36];
+      } else if (isOrigin) {
         bgColor = 'bg-green-500';
         borderColor = 'border-white';
         textColor = 'text-white';
@@ -286,7 +295,7 @@ export default function MapView({
       markersRef.current.push(marker);
     });
     }
-  }, [stops, selectedStop, originStop, destinationStop, transferPoints, onStopClick]);
+  }, [stops, selectedStop, originStop, destinationStop, previewStop, transferPoints, onStopClick]);
 
   // Center on selected stop
   useEffect(() => {
@@ -324,6 +333,91 @@ export default function MapView({
 
     setTimeout(() => centerOnStop(), 100);
   }, [selectedStop]);
+
+  // Center on preview stop when user is confirming location
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L || !previewStop) return;
+
+    const map = mapInstanceRef.current;
+
+    // Check if map is ready
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
+    const centerOnPreview = () => {
+      try {
+        map.invalidateSize();
+        map.setView([previewStop.lat, previewStop.lng], 16); // Higher zoom for preview
+      } catch (e) {
+        console.error('Error centering on preview stop:', e);
+      }
+    };
+
+    // Wait for map to be ready
+    if (!isMapReady()) {
+      const checkMapReady = setInterval(() => {
+        if (isMapReady()) {
+          clearInterval(checkMapReady);
+          setTimeout(() => centerOnPreview(), 100);
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
+
+    setTimeout(() => centerOnPreview(), 100);
+  }, [previewStop]);
+
+  // Center on origin or destination when only one is selected (planner tab)
+  // Skip if preview stop is active (preview takes priority)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L) return;
+
+    // Don't center on origin/destination if user is previewing a location
+    if (previewStop) return;
+
+    // Only center when exactly one of origin/destination is set (not both)
+    const stopToCenter = originStop && !destinationStop ? originStop
+                       : destinationStop && !originStop ? destinationStop
+                       : null;
+
+    if (!stopToCenter) return;
+
+    const map = mapInstanceRef.current;
+
+    // Check if map is ready
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
+    const centerOnStop = () => {
+      try {
+        map.invalidateSize();
+        map.setView([stopToCenter.lat, stopToCenter.lng], 15);
+      } catch (e) {
+        console.error('Error centering on origin/destination:', e);
+      }
+    };
+
+    // Wait for map to be ready
+    if (!isMapReady()) {
+      const checkMapReady = setInterval(() => {
+        if (isMapReady()) {
+          clearInterval(checkMapReady);
+          setTimeout(() => centerOnStop(), 100);
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
+
+    setTimeout(() => centerOnStop(), 100);
+  }, [originStop, destinationStop, previewStop]);
 
   // Auto-fit map bounds when both origin and destination are selected
   useEffect(() => {

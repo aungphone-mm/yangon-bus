@@ -28,7 +28,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<Tab>('search');
+  const [activeTab, setActiveTab] = useState<Tab>('planner');
   const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const [currentPath, setCurrentPath] = useState<PathResult | null>(null);
   const [showStopDetail, setShowStopDetail] = useState(false);
@@ -37,6 +37,7 @@ export default function Home() {
   // Planner tab states
   const [plannerOrigin, setPlannerOrigin] = useState<Stop | null>(null);
   const [plannerDestination, setPlannerDestination] = useState<Stop | null>(null);
+  const [plannerPreviewStop, setPlannerPreviewStop] = useState<Stop | null>(null);
 
   // Favorites hook
   const {
@@ -201,6 +202,8 @@ export default function Home() {
   const mapViewStops = useMemo(() => {
     if (activeTab === 'planner') {
       const stops = [];
+      // Add preview stop if user is confirming location
+      if (plannerPreviewStop) stops.push(plannerPreviewStop);
       if (plannerOrigin) stops.push(plannerOrigin);
       // Add transfer points to the map so they can be rendered
       if (transferPoints.length > 0) stops.push(...transferPoints);
@@ -222,7 +225,7 @@ export default function Home() {
     }
     if (selectedStop) return [selectedStop];
     return [];
-  }, [activeTab, hubStops, favoriteStops, plannerOrigin, plannerDestination, transferPoints, selectedRouteId, filteredRouteStops, stopLookup, selectedStop]);
+  }, [activeTab, hubStops, favoriteStops, plannerOrigin, plannerDestination, plannerPreviewStop, transferPoints, selectedRouteId, filteredRouteStops, stopLookup, selectedStop]);
 
   if (loading) {
     return (
@@ -282,8 +285,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex gap-1 overflow-x-auto scrollbar-thin hover:scrollbar-visible snap-x snap-mandatory scroll-smooth">
             {[
-              { id: 'search' as Tab, label: 'ရှာဖွေရန်', shortLabel: 'မှတ်တိုင် or Bus', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
               { id: 'planner' as Tab, label: 'လမ်းကြောင်းရှာရန်', shortLabel: 'လမ်းကြောင်းရှာရန်', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
+              { id: 'search' as Tab, label: 'ရှာဖွေရန်', shortLabel: 'မှတ်တိုင် or Bus', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
               { id: 'favorites' as Tab, label: 'အနှစ်သက်ဆုံး', shortLabel: 'အကြိုက်', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
               { id: 'hubs' as Tab, label: 'လမ်းဆုံမှတ်တိုင်များ', shortLabel: 'လမ်းဆုံ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
               { id: 'all-routes' as Tab, label: 'လမ်းကြောင်းအားလုံး', shortLabel: 'အားလုံး', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
@@ -418,6 +421,7 @@ export default function Home() {
                   onRouteSelected={handleRouteSelected}
                   onOriginChange={setPlannerOrigin}
                   onDestinationChange={setPlannerDestination}
+                  onPreviewStop={setPlannerPreviewStop}
                 />
               </div>
             )}
@@ -704,6 +708,7 @@ export default function Home() {
                 selectedStop={activeTab === 'all-routes' ? null : selectedStop}
                 originStop={activeTab === 'planner' ? plannerOrigin : null}
                 destinationStop={activeTab === 'planner' ? plannerDestination : null}
+                previewStop={activeTab === 'planner' ? plannerPreviewStop : null}
                 transferPoints={activeTab === 'planner' ? transferPoints : []}
                 onStopClick={handleStopSelect}
                 center={activeTab === 'all-routes' ? [16.8661, 96.1951] : undefined}
