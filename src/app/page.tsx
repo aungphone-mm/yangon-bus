@@ -8,6 +8,7 @@ import StopSearch from '@/components/StopSearch';
 import StopDetail from '@/components/StopDetail';
 import RoutePlanner from '@/components/RoutePlanner';
 import RouteSearch from '@/components/RouteSearch';
+import InstallButton from '@/components/InstallButton';
 
 // Dynamic import for map (avoid SSR issues with Leaflet)
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -736,6 +737,9 @@ export default function Home() {
           </p>
         </div>
       </footer>
+
+      {/* PWA Install Button */}
+      <InstallButton />
     </div>
   );
 }
