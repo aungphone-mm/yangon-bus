@@ -61,19 +61,20 @@ jobs:
           ISSUE_BODY=$(cat /tmp/issue_body.txt)
           ISSUE_TITLE="${{ steps.context.outputs.issue_title }}"
 
-          # Create the API request
-          cat > /tmp/request.json <<EOF
-          {
-            "model": "claude-sonnet-4-5-20250929",
-            "max_tokens": 4096,
-            "messages": [
-              {
-                "role": "user",
-                "content": "You are a helpful assistant for the Yangon Bus Transit App project. A user has asked for help in a GitHub issue.\n\nIssue Title: ${ISSUE_TITLE}\n\nUser Question:\n${ISSUE_BODY}\n\nPlease provide a helpful, concise response. If the question is about the codebase, refer to the project structure (Next.js 14, TypeScript, bus route planning app for Yangon, Myanmar with 2,093 stops and 125 routes). Focus on being specific and actionable."
-              }
-            ]
-          }
-          EOF
+          # Create the API request with proper JSON escaping using jq
+          jq -n \
+            --arg title "$ISSUE_TITLE" \
+            --arg body "$ISSUE_BODY" \
+            '{
+              "model": "claude-sonnet-4-5-20250929",
+              "max_tokens": 4096,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": ("You are a helpful assistant for the Yangon Bus Transit App project. A user has asked for help in a GitHub issue.\n\nIssue Title: " + $title + "\n\nUser Question:\n" + $body + "\n\nPlease provide a helpful, concise response. If the question is about the codebase, refer to the project structure (Next.js 14, TypeScript, bus route planning app for Yangon, Myanmar with 2,093 stops and 125 routes). Focus on being specific and actionable.")
+                }
+              ]
+            }' > /tmp/request.json
 
           # Call the API
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
