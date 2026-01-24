@@ -1,0 +1,37 @@
+name: Claude Bug Analyzer
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  claude-bug-analysis:
+    # Only run when the 'bug' label is added
+    if: github.event.label.name == 'bug'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Bug Analysis
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Custom prompt for bug analysis
+          prompt: |
+            A bug has been reported in this issue. Please:
+            1. Analyze the bug description and understand the problem
+            2. Search the codebase for the relevant files and code sections
+            3. Identify potential root causes based on the codebase structure
+            4. Suggest specific fixes with code examples if possible
+            5. Add a comment to this issue with your analysis and recommendations
+
+            Focus on the Yangon Bus Transit App architecture described in CLAUDE.md.

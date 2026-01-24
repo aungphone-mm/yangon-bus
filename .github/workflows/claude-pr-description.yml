@@ -1,0 +1,57 @@
+name: Claude PR Description Generator
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  generate-description:
+    # Only run if PR description is empty or very short
+    if: |
+      github.event.pull_request.body == null ||
+      github.event.pull_request.body == '' ||
+      length(github.event.pull_request.body) < 50
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch more history for better diff analysis
+          fetch-depth: 0
+
+      - name: Generate PR Description
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          additional_permissions: |
+            actions: read
+
+          # Custom prompt for PR description generation
+          prompt: |
+            This pull request needs a comprehensive description. Please:
+
+            1. Analyze the changes in this PR (files modified, additions, deletions)
+            2. Read the key files that were changed to understand the implementation
+            3. Generate a detailed PR description with the following sections:
+
+               ## Summary
+               (Brief overview of what this PR does - 2-3 sentences)
+
+               ## Changes Made
+               (Bulleted list of specific changes, referencing file paths)
+
+               ## Testing Notes
+               (How to test these changes, specific scenarios to verify)
+
+               ## Impact Areas
+               (Which parts of the app are affected, any breaking changes)
+
+            4. Update this PR's description with the generated content
+
+            Use the Yangon Bus Transit App context from CLAUDE.md when analyzing changes.

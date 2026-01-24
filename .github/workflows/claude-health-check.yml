@@ -1,0 +1,132 @@
+name: Claude Code Health Check
+
+on:
+  # Run every Monday at 9 AM UTC
+  schedule:
+    - cron: '0 9 * * 1'
+
+  # Allow manual triggering with custom focus area
+  workflow_dispatch:
+    inputs:
+      focus_area:
+        description: 'Area to analyze'
+        required: false
+        type: choice
+        default: 'general'
+        options:
+          - 'general'
+          - 'security'
+          - 'performance'
+          - 'typescript-types'
+          - 'accessibility'
+          - 'code-quality'
+
+      create_issue:
+        description: 'Create an issue with findings?'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set focus area
+        id: focus
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "area=general" >> $GITHUB_OUTPUT
+          else
+            echo "area=${{ github.event.inputs.focus_area }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Code Health Analysis
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Allow specific tools for code analysis
+          claude_args: '--allowed-tools Bash(npm:*),Grep,Read,Glob'
+
+          # Custom prompt based on focus area
+          prompt: |
+            Perform a comprehensive code health check for the Yangon Bus Transit App.
+
+            Focus area: ${{ steps.focus.outputs.area }}
+
+            Please analyze the codebase and provide detailed findings:
+
+            ${{ steps.focus.outputs.area == 'security' && '
+            ## Security Analysis
+            - Check for common vulnerabilities (XSS, injection, etc.)
+            - Review data handling and sanitization
+            - Check dependencies for known vulnerabilities
+            - Review authentication/authorization patterns
+            ' || '' }}
+
+            ${{ steps.focus.outputs.area == 'performance' && '
+            ## Performance Analysis
+            - Identify performance bottlenecks
+            - Check bundle size and optimization opportunities
+            - Review map rendering performance
+            - Analyze data loading and caching strategies
+            - Check for unnecessary re-renders
+            ' || '' }}
+
+            ${{ steps.focus.outputs.area == 'typescript-types' && '
+            ## TypeScript Type Safety
+            - Check for any type assertions or type casting
+            - Review type definitions in src/types/
+            - Look for implicit any types
+            - Check for proper interface usage
+            - Review generic type usage
+            ' || '' }}
+
+            ${{ steps.focus.outputs.area == 'accessibility' && '
+            ## Accessibility Analysis
+            - Check ARIA labels and roles
+            - Review keyboard navigation support
+            - Check color contrast and visual indicators
+            - Review screen reader compatibility
+            - Check mobile touch targets
+            ' || '' }}
+
+            ${{ steps.focus.outputs.area == 'code-quality' && '
+            ## Code Quality Review
+            - Check for code duplication
+            - Review component structure and organization
+            - Check for proper error handling
+            - Review naming conventions
+            - Check for unused code
+            ' || '' }}
+
+            ${{ steps.focus.outputs.area == 'general' && '
+            ## General Code Health
+            - Overall code quality assessment
+            - Check for obvious bugs or issues
+            - Review dependencies and package.json
+            - Check for outdated patterns
+            - Quick security and performance scan
+            ' || '' }}
+
+            After analysis:
+            ${{ github.event.inputs.create_issue == 'true' || github.event_name == 'schedule' && '
+            - Create a new issue titled "Code Health Report - [Focus Area] - [Date]"
+            - Include your findings with priority levels (High/Medium/Low)
+            - Provide actionable recommendations
+            - Add relevant labels (bug, enhancement, documentation, etc.)
+            ' || '
+            - Add a comment to this workflow run with your findings
+            ' }}
+
+            Reference the architecture and patterns documented in CLAUDE.md.
