@@ -140,6 +140,12 @@ export default function MapView({
   useEffect(() => {
     if (!mapInstanceRef.current || !window.L) return;
 
+    // Don't reset center/zoom if user is previewing a location
+    if (previewStop) return;
+
+    // Don't reset center/zoom if both origin and destination are set (auto-fit will handle it)
+    if (originStop && destinationStop) return;
+
     const map = mapInstanceRef.current;
 
     // Check if map is ready with proper container size
@@ -174,7 +180,7 @@ export default function MapView({
 
     // Add delay even if map appears ready
     setTimeout(() => updateView(), 100);
-  }, [center, zoom]);
+  }, [center, zoom, previewStop, originStop, destinationStop]);
 
   // Update markers when stops change
   useEffect(() => {
@@ -301,6 +307,9 @@ export default function MapView({
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedStop) return;
 
+    // Don't center on selected stop if both origin and destination are set (auto-fit will handle it)
+    if (originStop && destinationStop) return;
+
     const map = mapInstanceRef.current;
 
     // Check if map is ready with proper container size
@@ -332,7 +341,7 @@ export default function MapView({
     }
 
     setTimeout(() => centerOnStop(), 100);
-  }, [selectedStop]);
+  }, [selectedStop, originStop, destinationStop]);
 
   // Center on preview stop when user is confirming location
   useEffect(() => {
