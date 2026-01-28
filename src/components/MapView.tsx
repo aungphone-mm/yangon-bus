@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Stop } from '@/types/transit';
+import { Stop, PathResult, StopLookup } from '@/types/transit';
 
 // Leaflet types
 declare global {
@@ -17,6 +17,8 @@ interface MapViewProps {
   destinationStop?: Stop | null;
   previewStop?: Stop | null;
   transferPoints?: Stop[];
+  currentPath?: PathResult | null;
+  stopLookup?: StopLookup | null;
   onStopClick?: (stop: Stop) => void;
   center?: [number, number];
   zoom?: number;
@@ -29,6 +31,8 @@ export default function MapView({
   destinationStop = null,
   previewStop = null,
   transferPoints = [],
+  currentPath = null,
+  stopLookup = null,
   onStopClick,
   center = [16.8661, 96.1951], // Yangon center
   zoom = 12,
@@ -36,6 +40,7 @@ export default function MapView({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const polylinesRef = useRef<any[]>([]);
   const userMarkerRef = useRef<any>(null);
   const userAccuracyCircleRef = useRef<any>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -112,6 +117,7 @@ export default function MapView({
     return () => {
       if (mapInstanceRef.current) {
         markersRef.current.forEach(marker => marker.remove());
+        polylinesRef.current.forEach(polyline => polyline.remove());
         if (userMarkerRef.current) userMarkerRef.current.remove();
         if (userAccuracyCircleRef.current) userAccuracyCircleRef.current.remove();
         mapInstanceRef.current.remove();
@@ -414,6 +420,120 @@ export default function MapView({
       }
     );
   };
+
+  // Draw route polylines for current path
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L || !currentPath || !stopLookup) {
+      // Clear existing polylines if no path
+      polylinesRef.current.forEach(polyline => polyline.remove());
+      polylinesRef.current = [];
+      return;
+    }
+
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    // Check if map is ready
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
+    const drawPolylines = () => {
+      try {
+        // Clear existing polylines
+        polylinesRef.current.forEach(polyline => polyline.remove());
+        polylinesRef.current = [];
+
+        // Draw polylines for each segment
+        currentPath.segments.forEach((segment, index) => {
+          // Get coordinates from stopLookup
+          const fromStop = stopLookup.stops[segment.from.toString()];
+          const toStop = stopLookup.stops[segment.to.toString()];
+
+          if (fromStop && toStop) {
+            // Use different colors for different segments (to show transfers)
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']; // blue, red, green, orange
+            const color = colors[index % colors.length];
+
+            const polyline = L.polyline(
+              [[fromStop.lat, fromStop.lng], [toStop.lat, toStop.lng]],
+              {
+                color: color,
+                weight: 5,
+                opacity: 0.7,
+                smoothFactor: 1
+              }
+            ).addTo(map);
+
+            // Add popup showing route info
+            polyline.bindPopup(`
+              <div class="p-2">
+                <strong>လမ်းကြောင်း: ${segment.routeUsed || segment.routes[0]}</strong><br>
+                <span class="text-sm">${fromStop.name_mm} → ${toStop.name_mm}</span>
+              </div>
+            `);
+
+            polylinesRef.current.push(polyline);
+
+            // Add arrow markers to show direction
+            // Calculate midpoint
+            const midLat = (fromStop.lat + toStop.lat) / 2;
+            const midLng = (fromStop.lng + toStop.lng) / 2;
+
+            // Calculate angle between points
+            const angle = Math.atan2(
+              toStop.lat - fromStop.lat,
+              toStop.lng - fromStop.lng
+            ) * 180 / Math.PI + 90; // +90 to adjust for arrow pointing up by default
+
+            // Create arrow icon
+            const arrowIcon = L.divIcon({
+              className: 'arrow-icon',
+              html: `
+                <div style="
+                  transform: rotate(${angle}deg);
+                  width: 0;
+                  height: 0;
+                  border-left: 8px solid transparent;
+                  border-right: 8px solid transparent;
+                  border-bottom: 16px solid ${color};
+                  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+                "></div>
+              `,
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            });
+
+            // Add arrow marker at midpoint
+            const arrowMarker = L.marker([midLat, midLng], {
+              icon: arrowIcon,
+              interactive: false // Don't interfere with polyline clicks
+            }).addTo(map);
+
+            polylinesRef.current.push(arrowMarker);
+          }
+        });
+      } catch (e) {
+        console.error('Error drawing polylines:', e);
+      }
+    };
+
+    // Wait for map to be ready
+    if (!isMapReady()) {
+      const checkMapReady = setInterval(() => {
+        if (isMapReady()) {
+          clearInterval(checkMapReady);
+          setTimeout(() => drawPolylines(), 50);
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
+
+    setTimeout(() => drawPolylines(), 50);
+  }, [currentPath, stopLookup]);
 
   // Center on selected stop
   useEffect(() => {
