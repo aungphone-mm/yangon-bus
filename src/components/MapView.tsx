@@ -421,7 +421,7 @@ export default function MapView({
     );
   };
 
-  // Draw complete route polylines for all routes in current path
+  // Draw path polylines for the actual journey segments only
   useEffect(() => {
     if (!mapInstanceRef.current || !window.L || !currentPath || !stopLookup) {
       // Clear existing polylines if no path
@@ -447,7 +447,7 @@ export default function MapView({
         polylinesRef.current.forEach(polyline => polyline.remove());
         polylinesRef.current = [];
 
-        // Get all unique route IDs used in the journey
+        // Get all unique route IDs used in the journey for coloring
         const routeIds = new Set<string>();
         currentPath.segments.forEach(segment => {
           const routeUsed = segment.routeUsed || segment.routes[0];
@@ -461,138 +461,69 @@ export default function MapView({
           routeColors.set(routeId, colors[index % colors.length]);
         });
 
-        // For each route, draw the complete route line
-        routeIds.forEach((routeId) => {
-          const color = routeColors.get(routeId) || '#3b82f6';
+        // Draw only the actual path segments from A to B
+        currentPath.segments.forEach((segment, index) => {
+          const fromStop = stopLookup.stops[segment.from];
+          const toStop = stopLookup.stops[segment.to];
 
-          // Get all stops that have this route
-          const routeStops: Stop[] = [];
-          Object.values(stopLookup.stops).forEach(stop => {
-            if (stop.routes.some(r => r.id === routeId)) {
-              routeStops.push(stop);
+          if (!fromStop || !toStop) return;
+
+          const routeUsed = segment.routeUsed || segment.routes[0];
+          const color = routeColors.get(routeUsed) || '#3b82f6';
+
+          const polyline = L.polyline(
+            [[fromStop.lat, fromStop.lng], [toStop.lat, toStop.lng]],
+            {
+              color: color,
+              weight: 5,
+              opacity: 0.8,
+              smoothFactor: 1
             }
-          });
+          ).addTo(map);
 
-          if (routeStops.length < 2) return;
+          // Add popup showing route info
+          polyline.bindPopup(`
+            <div class="p-2">
+              <strong>လမ်းကြောင်း: ${routeUsed}</strong><br>
+              <span class="text-sm">${fromStop.name_mm} → ${toStop.name_mm}</span>
+            </div>
+          `);
 
-          // Build connected path using graph adjacency
-          // Find a starting point (a stop with this route that has minimal incoming connections)
-          const visited = new Set<number>();
-          const orderedStops: Stop[] = [];
+          polylinesRef.current.push(polyline);
 
-          // Start from the first stop we find
-          let currentStop = routeStops[0];
-          orderedStops.push(currentStop);
-          visited.add(currentStop.id);
+          // Add arrow every few segments to show direction
+          if (index % 2 === 0) {
+            const midLat = (fromStop.lat + toStop.lat) / 2;
+            const midLng = (fromStop.lng + toStop.lng) / 2;
 
-          // Try to build a path by following connections
-          while (orderedStops.length < routeStops.length) {
-            let found = false;
+            const angle = Math.atan2(
+              toStop.lat - fromStop.lat,
+              toStop.lng - fromStop.lng
+            ) * 180 / Math.PI + 90;
 
-            // Look for an unvisited stop that connects to current stop via this route
-            for (const nextStop of routeStops) {
-              if (visited.has(nextStop.id)) continue;
+            const arrowIcon = L.divIcon({
+              className: 'arrow-icon',
+              html: `
+                <div style="
+                  transform: rotate(${angle}deg);
+                  width: 0;
+                  height: 0;
+                  border-left: 6px solid transparent;
+                  border-right: 6px solid transparent;
+                  border-bottom: 12px solid ${color};
+                  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+                "></div>
+              `,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6]
+            });
 
-              // Check if there's a direct connection (simple distance check)
-              const distance = Math.sqrt(
-                Math.pow(nextStop.lat - currentStop.lat, 2) +
-                Math.pow(nextStop.lng - currentStop.lng, 2)
-              );
+            const arrowMarker = L.marker([midLat, midLng], {
+              icon: arrowIcon,
+              interactive: false
+            }).addTo(map);
 
-              // If stops are reasonably close, connect them
-              if (distance < 0.05) { // Roughly 5km threshold
-                orderedStops.push(nextStop);
-                visited.add(nextStop.id);
-                currentStop = nextStop;
-                found = true;
-                break;
-              }
-            }
-
-            if (!found) {
-              // Find the nearest unvisited stop
-              let nearest = null;
-              let minDist = Infinity;
-              for (const stop of routeStops) {
-                if (visited.has(stop.id)) continue;
-                const distance = Math.sqrt(
-                  Math.pow(stop.lat - currentStop.lat, 2) +
-                  Math.pow(stop.lng - currentStop.lng, 2)
-                );
-                if (distance < minDist) {
-                  minDist = distance;
-                  nearest = stop;
-                }
-              }
-              if (nearest) {
-                orderedStops.push(nearest);
-                visited.add(nearest.id);
-                currentStop = nearest;
-              } else {
-                break;
-              }
-            }
-          }
-
-          // Draw polylines between consecutive stops
-          for (let i = 0; i < orderedStops.length - 1; i++) {
-            const fromStop = orderedStops[i];
-            const toStop = orderedStops[i + 1];
-
-            const polyline = L.polyline(
-              [[fromStop.lat, fromStop.lng], [toStop.lat, toStop.lng]],
-              {
-                color: color,
-                weight: 4,
-                opacity: 0.6,
-                smoothFactor: 1
-              }
-            ).addTo(map);
-
-            // Add popup showing route info
-            polyline.bindPopup(`
-              <div class="p-2">
-                <strong>လမ်းကြောင်း: ${routeId}</strong><br>
-                <span class="text-sm">${fromStop.name_mm} → ${toStop.name_mm}</span>
-              </div>
-            `);
-
-            polylinesRef.current.push(polyline);
-
-            // Add arrow every few stops to show direction
-            if (i % 3 === 0) { // Add arrow every 3rd segment
-              const midLat = (fromStop.lat + toStop.lat) / 2;
-              const midLng = (fromStop.lng + toStop.lng) / 2;
-
-              const angle = Math.atan2(
-                toStop.lat - fromStop.lat,
-                toStop.lng - fromStop.lng
-              ) * 180 / Math.PI + 90;
-
-              const arrowIcon = L.divIcon({
-                className: 'arrow-icon',
-                html: `
-                  <div style="
-                    transform: rotate(${angle}deg);
-                    width: 0;
-                    height: 0;
-                    border-left: 6px solid transparent;
-                    border-right: 6px solid transparent;
-                    border-bottom: 12px solid ${color};
-                    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-                  "></div>
-                `,
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-              });
-
-              const arrowMarker = L.marker([midLat, midLng], {
-                icon: arrowIcon,
-                interactive: false
-              }).addTo(map);
-
-              polylinesRef.current.push(arrowMarker);
-            }
+            polylinesRef.current.push(arrowMarker);
           }
         });
       } catch (e) {
