@@ -27,7 +27,20 @@ export default function RouteSearch({
   const [initialized, setInitialized] = useState(false);
   const [justSelected, setJustSelected] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<RouteSearchResult | null>(null);
+  const [recentSearches, setRecentSearches] = useState<RouteSearchResult[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('recent-route-searches');
+      if (stored) {
+        setRecentSearches(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Error loading recent searches:', e);
+    }
+  }, []);
 
   // Initialize search on mount or when stopLookup changes
   useEffect(() => {
@@ -51,11 +64,14 @@ export default function RouteSearch({
       const searchResults = searchRoutes(query, 10);
       setResults(searchResults);
       setIsOpen(true);
+    } else if (query.length === 0 && isOpen) {
+      // Show recent searches when no query
+      setResults(recentSearches);
     } else {
       setResults([]);
       setIsOpen(false);
     }
-  }, [query, initialized, justSelected]);
+  }, [query, initialized, justSelected, recentSearches, isOpen]);
 
   // Update selected route when selectedRouteId changes
   useEffect(() => {
@@ -86,6 +102,15 @@ export default function RouteSearch({
     setIsOpen(false);
     setSelectedRoute(route);
     onSelectRoute(route.id);
+
+    // Save to recent searches
+    try {
+      const updated = [route, ...recentSearches.filter(r => r.id !== route.id)].slice(0, 10);
+      setRecentSearches(updated);
+      localStorage.setItem('recent-route-searches', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving recent search:', e);
+    }
   };
 
   const handleClear = () => {
@@ -94,6 +119,23 @@ export default function RouteSearch({
     setIsOpen(false);
     setSelectedRoute(null);
     onClearRoute?.();
+  };
+
+  const handleFocus = () => {
+    setIsOpen(true);
+    if (query.length === 0) {
+      setResults(recentSearches);
+    }
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    setResults([]);
+    try {
+      localStorage.removeItem('recent-route-searches');
+    } catch (e) {
+      console.error('Error clearing recent searches:', e);
+    }
   };
 
   return (
@@ -128,6 +170,7 @@ export default function RouteSearch({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onFocus={handleFocus}
             placeholder={placeholder}
             className="w-full px-4 py-3 pl-10 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           />
@@ -163,6 +206,18 @@ export default function RouteSearch({
       {/* Dropdown Results */}
       {!selectedRoute && isOpen && results.length > 0 && (
         <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[40vh] sm:max-h-80 overflow-y-auto">
+          {/* Recent Searches Header */}
+          {query.length === 0 && recentSearches.length > 0 && (
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100 sticky top-0">
+              <span className="text-xs font-semibold text-gray-500">လတ်တလောရှာဖွေမှုများ</span>
+              <button
+                onClick={clearRecentSearches}
+                className="text-xs text-primary hover:text-primary/80 hover:underline"
+              >
+                ရှင်းရန်
+              </button>
+            </div>
+          )}
           {results.map((route) => (
             <button
               key={route.id}

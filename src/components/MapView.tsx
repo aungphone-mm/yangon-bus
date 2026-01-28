@@ -447,75 +447,114 @@ export default function MapView({
         polylinesRef.current.forEach(polyline => polyline.remove());
         polylinesRef.current = [];
 
-        // Draw polylines for each segment
-        currentPath.segments.forEach((segment, index) => {
-          // Get coordinates from stopLookup
-          const fromStop = stopLookup.stops[segment.from.toString()];
-          const toStop = stopLookup.stops[segment.to.toString()];
+        // Get the full path of stop IDs
+        const pathStops = currentPath.path;
+        if (!pathStops || pathStops.length < 2) return;
 
-          if (fromStop && toStop) {
-            // Use different colors for different segments (to show transfers)
-            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']; // blue, red, green, orange
-            const color = colors[index % colors.length];
+        // Map segments to know which route is used and transfer points
+        const segmentMap = new Map();
+        let currentSegmentIndex = 0;
 
-            const polyline = L.polyline(
-              [[fromStop.lat, fromStop.lng], [toStop.lat, toStop.lng]],
-              {
-                color: color,
-                weight: 5,
-                opacity: 0.7,
-                smoothFactor: 1
-              }
-            ).addTo(map);
-
-            // Add popup showing route info
-            polyline.bindPopup(`
-              <div class="p-2">
-                <strong>လမ်းကြောင်း: ${segment.routeUsed || segment.routes[0]}</strong><br>
-                <span class="text-sm">${fromStop.name_mm} → ${toStop.name_mm}</span>
-              </div>
-            `);
-
-            polylinesRef.current.push(polyline);
-
-            // Add arrow markers to show direction
-            // Calculate midpoint
-            const midLat = (fromStop.lat + toStop.lat) / 2;
-            const midLng = (fromStop.lng + toStop.lng) / 2;
-
-            // Calculate angle between points
-            const angle = Math.atan2(
-              toStop.lat - fromStop.lat,
-              toStop.lng - fromStop.lng
-            ) * 180 / Math.PI + 90; // +90 to adjust for arrow pointing up by default
-
-            // Create arrow icon
-            const arrowIcon = L.divIcon({
-              className: 'arrow-icon',
-              html: `
-                <div style="
-                  transform: rotate(${angle}deg);
-                  width: 0;
-                  height: 0;
-                  border-left: 8px solid transparent;
-                  border-right: 8px solid transparent;
-                  border-bottom: 16px solid ${color};
-                  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-                "></div>
-              `,
-              iconSize: [16, 16],
-              iconAnchor: [8, 8]
-            });
-
-            // Add arrow marker at midpoint
-            const arrowMarker = L.marker([midLat, midLng], {
-              icon: arrowIcon,
-              interactive: false // Don't interfere with polyline clicks
-            }).addTo(map);
-
-            polylinesRef.current.push(arrowMarker);
-          }
+        currentPath.segments.forEach((segment, idx) => {
+          segmentMap.set(`${segment.from}-${segment.to}`, {
+            routeUsed: segment.routeUsed || segment.routes[0],
+            segmentIndex: idx,
+            isTransferPoint: segment.isTransferPoint
+          });
         });
+
+        // Draw polylines between each consecutive pair of stops
+        for (let i = 0; i < pathStops.length - 1; i++) {
+          const fromStopId = pathStops[i];
+          const toStopId = pathStops[i + 1];
+
+          const fromStop = stopLookup.stops[fromStopId.toString()];
+          const toStop = stopLookup.stops[toStopId.toString()];
+
+          if (!fromStop || !toStop) continue;
+
+          // Find which segment this pair belongs to
+          let segmentInfo = null;
+          let segmentIndex = 0;
+
+          for (const segment of currentPath.segments) {
+            const segmentStops = currentPath.path.slice(
+              currentPath.path.indexOf(segment.from),
+              currentPath.path.indexOf(segment.to) + 1
+            );
+
+            if (segmentStops.includes(fromStopId) && segmentStops.includes(toStopId)) {
+              segmentInfo = {
+                routeUsed: segment.routeUsed || segment.routes[0],
+                segmentIndex: currentPath.segments.indexOf(segment)
+              };
+              segmentIndex = segmentInfo.segmentIndex;
+              break;
+            }
+          }
+
+          // Use different colors for different segments (to show transfers)
+          const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']; // blue, red, green, orange
+          const color = colors[segmentIndex % colors.length];
+
+          // Draw polyline
+          const polyline = L.polyline(
+            [[fromStop.lat, fromStop.lng], [toStop.lat, toStop.lng]],
+            {
+              color: color,
+              weight: 5,
+              opacity: 0.7,
+              smoothFactor: 1
+            }
+          ).addTo(map);
+
+          // Add popup showing route info
+          polyline.bindPopup(`
+            <div class="p-2">
+              <strong>လမ်းကြောင်း: ${segmentInfo?.routeUsed || 'Unknown'}</strong><br>
+              <span class="text-sm">${fromStop.name_mm} → ${toStop.name_mm}</span>
+            </div>
+          `);
+
+          polylinesRef.current.push(polyline);
+
+          // Add arrow markers to show direction
+          // Calculate midpoint
+          const midLat = (fromStop.lat + toStop.lat) / 2;
+          const midLng = (fromStop.lng + toStop.lng) / 2;
+
+          // Calculate angle between points
+          const angle = Math.atan2(
+            toStop.lat - fromStop.lat,
+            toStop.lng - fromStop.lng
+          ) * 180 / Math.PI + 90; // +90 to adjust for arrow pointing up by default
+
+          // Create arrow icon
+          const arrowIcon = L.divIcon({
+            className: 'arrow-icon',
+            html: `
+              <div style="
+                transform: rotate(${angle}deg);
+                width: 0;
+                height: 0;
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-bottom: 12px solid ${color};
+                filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+              "></div>
+            `,
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+          });
+
+          // Add arrow marker at midpoint
+          const arrowMarker = L.marker([midLat, midLng], {
+            icon: arrowIcon,
+            interactive: false // Don't interfere with polyline clicks
+          }).addTo(map);
+
+          polylinesRef.current.push(arrowMarker);
+        }
       } catch (e) {
         console.error('Error drawing polylines:', e);
       }
