@@ -712,6 +712,7 @@ export default function Home() {
                 transferPoints={activeTab === 'planner' ? transferPoints : []}
                 currentPath={activeTab === 'planner' ? currentPath : null}
                 stopLookup={stopLookup}
+                graph={activeTab === 'planner' ? graph : null}
                 onStopClick={handleStopSelect}
                 center={activeTab === 'all-routes' ? [16.8661, 96.1951] : undefined}
                 zoom={activeTab === 'all-routes' ? 11 : undefined}
