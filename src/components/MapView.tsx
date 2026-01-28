@@ -36,6 +36,10 @@ export default function MapView({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const userMarkerRef = useRef<any>(null);
+  const userAccuracyCircleRef = useRef<any>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Detect mobile device immediately using window.innerWidth
   const [isMobile, setIsMobile] = useState(() => {
@@ -108,6 +112,8 @@ export default function MapView({
     return () => {
       if (mapInstanceRef.current) {
         markersRef.current.forEach(marker => marker.remove());
+        if (userMarkerRef.current) userMarkerRef.current.remove();
+        if (userAccuracyCircleRef.current) userAccuracyCircleRef.current.remove();
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
@@ -300,8 +306,114 @@ export default function MapView({
 
       markersRef.current.push(marker);
     });
-    }
+  }
   }, [stops, selectedStop, originStop, destinationStop, previewStop, transferPoints, onStopClick]);
+
+  // Handle User Location Marker
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.L || !userLocation) return;
+
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    // Check if map is ready
+    const isMapReady = () => {
+      return map._loaded &&
+             map.getContainer() &&
+             map.getSize().x > 0 &&
+             map.getSize().y > 0;
+    };
+
+    const addUserMarker = () => {
+      try {
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setLatLng(userLocation);
+        } else {
+          // Create a pulsing blue dot marker for user location
+          userMarkerRef.current = L.circleMarker(userLocation, {
+            radius: 10,
+            fillColor: '#3b82f6', // Blue-500
+            color: '#ffffff',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 1
+          }).addTo(map);
+
+          userMarkerRef.current.bindPopup("<strong>သင်ရောက်ရှိနေသောနေရာ</strong>");
+        }
+
+        // Add or update accuracy circle (light blue circle around the marker)
+        if (userAccuracyCircleRef.current) {
+          userAccuracyCircleRef.current.setLatLng(userLocation);
+        } else {
+          userAccuracyCircleRef.current = L.circle(userLocation, {
+            radius: 50, // 50 meters accuracy radius
+            fillColor: '#3b82f6',
+            color: '#3b82f6',
+            weight: 1,
+            opacity: 0.3,
+            fillOpacity: 0.1
+          }).addTo(map);
+        }
+      } catch (e) {
+        console.error('Error adding user marker:', e);
+      }
+    };
+
+    // Wait for map to be ready
+    if (!isMapReady()) {
+      const checkMapReady = setInterval(() => {
+        if (isMapReady()) {
+          clearInterval(checkMapReady);
+          setTimeout(() => addUserMarker(), 50);
+        }
+      }, 100);
+      return () => clearInterval(checkMapReady);
+    }
+
+    setTimeout(() => addUserMarker(), 50);
+  }, [userLocation]);
+
+  const handleLocate = () => {
+    if (!('geolocation' in navigator)) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+
+    // Unlock map on mobile when locating
+    if (isMobile && isMapLocked) {
+      setIsMapLocked(false);
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        setUserLocation([latitude, longitude]);
+        setIsLocating(false);
+
+        // Update accuracy circle with actual GPS accuracy
+        if (userAccuracyCircleRef.current) {
+          userAccuracyCircleRef.current.setRadius(accuracy);
+        }
+
+        // Center map on user location with appropriate zoom
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([latitude, longitude], 16);
+        }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setIsLocating(false);
+        alert('Unable to retrieve your location');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
 
   // Center on selected stop
   useEffect(() => {
@@ -478,34 +590,53 @@ export default function MapView({
     <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden">
       <div ref={mapRef} className="absolute inset-0" />
 
-      {/* Mobile Map Lock/Unlock Button */}
-      {isMobile && (
-        <div className="absolute top-3 right-3 z-[1000]">
-          <button
-            onClick={() => setIsMapLocked(!isMapLocked)}
-            className={`bg-white rounded-lg shadow-lg p-2.5 hover:bg-gray-50 active:bg-gray-100 transition-all ${
-              !isMapLocked ? 'ring-2 ring-green-500' : ''
-            }`}
-            aria-label={isMapLocked ? "မြေပုံသော့ဖွင့်ရန်" : "မြေပုံသော့ခတ်ရန်"}
-            title={isMapLocked ? "မြေပုံကိုရွှေ့လျားကြည့်ရန် သော့ဖွင့်ပါ" : "မြေပုံကိုသော့ခတ်ပါ"}
-          >
-            {isMapLocked ? (
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-              </svg>
-            )}
-          </button>
-          {isMapLocked && (
-            <div className="mt-1 bg-gray-900/90 text-white text-[10px] px-2 py-1 rounded text-center whitespace-nowrap">
-              သော့ခတ်ထားသည်
-            </div>
+      {/* Map Controls (Lock & Locate) */}
+      <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
+        {/* Locate Me Button */}
+        <button
+          onClick={handleLocate}
+          className="bg-white rounded-lg shadow-lg p-2.5 hover:bg-gray-50 active:bg-gray-100 transition-all text-gray-700"
+          title="ကျွန်ုပ်၏တည်နေရာ"
+        >
+          {isLocating ? (
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
           )}
-        </div>
-      )}
+        </button>
+
+        {/* Mobile Map Lock/Unlock Button */}
+        {isMobile && (
+          <>
+            <button
+              onClick={() => setIsMapLocked(!isMapLocked)}
+              className={`bg-white rounded-lg shadow-lg p-2.5 hover:bg-gray-50 active:bg-gray-100 transition-all ${
+                !isMapLocked ? 'ring-2 ring-green-500' : ''
+              }`}
+              aria-label={isMapLocked ? "မြေပုံသော့ဖွင့်ရန်" : "မြေပုံသော့ခတ်ရန်"}
+              title={isMapLocked ? "မြေပုံကိုရွှေ့လျားကြည့်ရန် သော့ဖွင့်ပါ" : "မြေပုံကိုသော့ခတ်ပါ"}
+            >
+              {isMapLocked ? (
+                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+              )}
+            </button>
+            {isMapLocked && (
+              <div className="mt-1 bg-gray-900/90 text-white text-[10px] px-2 py-1 rounded text-center whitespace-nowrap">
+                သော့ခတ်ထားသည်
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Legend */}
       <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 text-[10px] sm:text-xs z-[1000] max-w-[calc(100%-6rem)]">
