@@ -82,15 +82,18 @@ export default function RoutePlanner({
   // Find path when both stops are selected
   useEffect(() => {
     if (origin && destination) {
+      if (!graph || !graph.adjacency) {
+        setError('ဒေတာမတင်ရသေးပါ။ ခဏစောင့်ပါ။');
+        return;
+      }
+
       setIsSearching(true);
       setError(null);
 
-      // Use requestAnimationFrame for better UI responsiveness
+      // Use setTimeout for better UI responsiveness
       const timeoutId = setTimeout(() => {
         try {
-          console.log('Finding path from', origin.id, 'to', destination.id);
           const pathResults = findPathWithTransfers(graph, origin.id, destination.id);
-          console.log('Path results:', pathResults);
           setResults(pathResults);
           setSelectedIndex(0);
           onPathFoundRef.current?.(pathResults);

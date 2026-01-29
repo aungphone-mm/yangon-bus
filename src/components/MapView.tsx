@@ -701,6 +701,12 @@ export default function MapView({
 
     const fitBounds = () => {
       try {
+        // Validate coordinates before creating bounds
+        if (!originStop?.lat || !originStop?.lng || !destinationStop?.lat || !destinationStop?.lng) {
+          console.warn('Invalid coordinates for bounds:', { originStop, destinationStop });
+          return;
+        }
+
         map.invalidateSize();
 
         // Create bounds from origin and destination
@@ -708,6 +714,12 @@ export default function MapView({
           [originStop.lat, originStop.lng],
           [destinationStop.lat, destinationStop.lng]
         );
+
+        // Validate bounds before fitting
+        if (!bounds.isValid()) {
+          console.warn('Invalid bounds:', bounds);
+          return;
+        }
 
         // Fit map to bounds with padding
         map.fitBounds(bounds, { padding: [50, 50] });

@@ -451,6 +451,11 @@ function findPathWithTransferOptimization(
     const state = queue.dequeue()!;
     const stateKey = `${state.stopId}:${state.currentRoute || 'null'}`;
 
+    // Early termination: if we're processing a state with cost higher than best destination, we're done
+    if (state.cost > bestDestCost) {
+      break;
+    }
+
     // Check if we've found a better path to this state
     if (visited.has(stateKey) && visited.get(stateKey)! <= state.cost) {
       continue;
