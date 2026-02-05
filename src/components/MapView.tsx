@@ -18,6 +18,7 @@ interface MapViewProps {
   previewStop?: Stop | null;
   transferPoints?: Stop[];
   currentPath?: PathResult | null;
+  highlightedStops?: Stop[]; // Stops to highlight with their route polylines
   stopLookup?: StopLookup | null;
   graph?: PlannerGraph | null;
   onStopClick?: (stop: Stop) => void;
@@ -47,6 +48,7 @@ export default function MapView({
   previewStop = null,
   transferPoints = [],
   currentPath = null,
+  highlightedStops = [],
   stopLookup = null,
   graph = null,
   onStopClick,
@@ -564,6 +566,129 @@ export default function MapView({
 
     setTimeout(() => drawPolylines(), 50);
   }, [currentPath, stopLookup, graph]);
+
+  // Draw route polylines for highlighted stops (used by picker tab)
+  useEffect(() => {
+    // Skip if currentPath is present (let the other effect handle it)
+    if (!mapInstanceRef.current || !window.L || !graph || !highlightedStops?.length || currentPath) {
+      return;
+    }
+
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    const isMapReady = () => checkMapReady(map);
+
+    const drawHighlightedRoutes = () => {
+      try {
+        // Clear existing polylines
+        polylinesRef.current.forEach(polyline => polyline.remove());
+        polylinesRef.current = [];
+
+        // Get all route IDs from highlighted stops
+        const routeIds = new Set<string>();
+        const routeColors = new Map<string, string>();
+
+        highlightedStops.forEach(stop => {
+          stop.routes.forEach(route => {
+            routeIds.add(route.id);
+            if (!routeColors.has(route.id)) {
+              routeColors.set(route.id, `#${route.color}`);
+            }
+          });
+        });
+
+        // Draw polylines for each route
+        routeIds.forEach((routeId) => {
+          const color = routeColors.get(routeId) || '#3b82f6';
+          let edgeCount = 0;
+
+          // Iterate through all edges in the graph
+          Object.entries(graph.adjacency).forEach(([fromIdStr, edges]) => {
+            const fromNode = graph.nodes[fromIdStr];
+            if (!fromNode) return;
+
+            edges.forEach(edge => {
+              if (!edge.routes.includes(routeId)) return;
+
+              const toNode = graph.nodes[edge.to.toString()];
+              if (!toNode) return;
+
+              const polyline = L.polyline(
+                [[fromNode.lat, fromNode.lng], [toNode.lat, toNode.lng]],
+                {
+                  color: color,
+                  weight: 4,
+                  opacity: 0.6,
+                  smoothFactor: 1
+                }
+              ).addTo(map);
+
+              polyline.bindPopup(`
+                <div class="p-2">
+                  <strong>လမ်းကြောင်း: ${routeId}</strong><br>
+                  <span class="text-sm">${fromNode.name_mm} → ${toNode.name_mm}</span>
+                </div>
+              `);
+
+              polylinesRef.current.push(polyline);
+
+              // Add direction arrows every few edges
+              if (edgeCount % 8 === 0) {
+                const midLat = (fromNode.lat + toNode.lat) / 2;
+                const midLng = (fromNode.lng + toNode.lng) / 2;
+
+                const angle = Math.atan2(
+                  toNode.lat - fromNode.lat,
+                  toNode.lng - fromNode.lng
+                ) * 180 / Math.PI + 90;
+
+                const arrowIcon = L.divIcon({
+                  className: 'arrow-icon',
+                  html: `
+                    <div style="
+                      transform: rotate(${angle}deg);
+                      width: 0;
+                      height: 0;
+                      border-left: 5px solid transparent;
+                      border-right: 5px solid transparent;
+                      border-bottom: 10px solid ${color};
+                      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+                    "></div>
+                  `,
+                  iconSize: [10, 10],
+                  iconAnchor: [5, 5]
+                });
+
+                const arrowMarker = L.marker([midLat, midLng], {
+                  icon: arrowIcon,
+                  interactive: false
+                }).addTo(map);
+
+                polylinesRef.current.push(arrowMarker);
+              }
+
+              edgeCount++;
+            });
+          });
+        });
+      } catch (e) {
+        console.error('Error drawing highlighted routes:', e);
+      }
+    };
+
+    if (!isMapReady()) {
+      const checkMapReadyInterval = setInterval(() => {
+        if (isMapReady()) {
+          clearInterval(checkMapReadyInterval);
+          setTimeout(() => drawHighlightedRoutes(), 50);
+        }
+      }, 100);
+      return () => clearInterval(checkMapReadyInterval);
+    }
+
+    setTimeout(() => drawHighlightedRoutes(), 50);
+  }, [highlightedStops, graph, currentPath]);
 
   // Center on selected stop
   useEffect(() => {

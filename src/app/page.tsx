@@ -729,13 +729,14 @@ export default function Home() {
               <MapView
                 stops={mapViewStops}
                 selectedStop={activeTab === 'all-routes' ? null : selectedStop}
-                originStop={activeTab === 'planner' ? plannerOrigin : null}
-                destinationStop={activeTab === 'planner' ? plannerDestination : null}
-                previewStop={activeTab === 'planner' ? plannerPreviewStop : null}
+                originStop={activeTab === 'planner' ? plannerOrigin : (activeTab === 'picker' ? pickerOrigin : null)}
+                destinationStop={activeTab === 'planner' ? plannerDestination : (activeTab === 'picker' ? pickerDestination : null)}
+                previewStop={activeTab === 'planner' ? plannerPreviewStop : (activeTab === 'picker' ? pickerPreviewStop : null)}
                 transferPoints={activeTab === 'planner' ? transferPoints : []}
                 currentPath={activeTab === 'planner' ? currentPath : null}
+                highlightedStops={activeTab === 'picker' ? [pickerOrigin, pickerDestination].filter(Boolean) as Stop[] : []}
                 stopLookup={stopLookup}
-                graph={activeTab === 'planner' ? graph : null}
+                graph={activeTab === 'planner' || activeTab === 'picker' ? graph : null}
                 onStopClick={handleStopSelect}
                 center={activeTab === 'all-routes' ? [16.8661, 96.1951] : undefined}
                 zoom={activeTab === 'all-routes' ? 11 : undefined}
