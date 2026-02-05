@@ -891,51 +891,8 @@ export default function MapView({
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 text-[10px] sm:text-xs z-[1000] max-w-[200px]">
-        {highlightedStops.length > 0 ? (
-          <>
-            {/* Route Colors Legend for Picker Tab */}
-            <div className="mb-2">
-              {originStop && (
-                <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-[10px]">A</div>
-                  <span className="truncate">စတင်ရာ</span>
-                </div>
-              )}
-              {destinationStop && (
-                <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-[10px]">B</div>
-                  <span className="truncate">ရောက်ရာ</span>
-                </div>
-              )}
-            </div>
-            <div className="border-t border-gray-200 pt-2">
-              <p className="text-[9px] text-gray-500 mb-1">လမ်းကြောင်းများ</p>
-              <div className="space-y-1 max-h-[120px] overflow-y-auto">
-                {(() => {
-                  const distinctColors = [
-                    '#e63946', '#2a9d8f', '#e9c46a', '#264653', '#f4a261',
-                    '#9b5de5', '#00bbf9', '#00f5d4', '#f15bb5', '#fee440',
-                    '#3b82f6', '#22c55e',
-                  ];
-                  const routeIds = new Set<string>();
-                  highlightedStops.forEach(stop => {
-                    stop.routes.forEach(route => routeIds.add(route.id));
-                  });
-                  return Array.from(routeIds).map((routeId, index) => (
-                    <div key={routeId} className="flex items-center gap-1.5">
-                      <div
-                        className="w-3 h-3 rounded-sm flex-shrink-0"
-                        style={{ backgroundColor: distinctColors[index % distinctColors.length] }}
-                      />
-                      <span className="truncate">{routeId}</span>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
-          </>
-        ) : (originStop || destinationStop) ? (
+      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 text-[10px] sm:text-xs z-[1000] max-w-[calc(100%-6rem)]">
+        {(originStop || destinationStop) ? (
           <>
             {originStop && (
               <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
