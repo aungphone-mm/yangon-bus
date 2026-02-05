@@ -10,6 +10,8 @@ interface LocationPickerProps {
     onDestinationChange?: (stop: Stop | null) => void;
     onPreviewStop?: (stop: Stop | null) => void;
     onComplete?: (origin: Stop, destination: Stop) => void;
+    selectedRoute?: string | null;
+    onSelectRoute?: (routeId: string | null) => void;
 }
 
 export default function LocationPicker({
@@ -18,6 +20,8 @@ export default function LocationPicker({
     onDestinationChange,
     onPreviewStop,
     onComplete,
+    selectedRoute = null,
+    onSelectRoute,
 }: LocationPickerProps) {
     const [origin, setOrigin] = useState<Stop | null>(null);
     const [destination, setDestination] = useState<Stop | null>(null);
@@ -274,16 +278,20 @@ export default function LocationPicker({
                                         </p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {origin.routes.map((route) => (
-                                                <span
+                                                <button
                                                     key={route.id}
-                                                    className="flex items-center gap-1.5 px-2 py-1 bg-white border rounded text-xs font-medium shadow-sm"
+                                                    onClick={() => onSelectRoute?.(selectedRoute === route.id ? null : route.id)}
+                                                    className={`flex items-center gap-1.5 px-2 py-1 border rounded text-xs font-medium shadow-sm transition-all cursor-pointer hover:scale-105 ${selectedRoute === route.id
+                                                        ? 'ring-2 ring-offset-1 ring-blue-500 bg-blue-50'
+                                                        : 'bg-white hover:bg-gray-50'
+                                                        }`}
                                                 >
                                                     <span
                                                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                                         style={{ backgroundColor: getRouteColor(route.id) }}
                                                     />
                                                     {route.id}
-                                                </span>
+                                                </button>
                                             ))}
                                         </div>
                                     </div>
@@ -298,16 +306,20 @@ export default function LocationPicker({
                                         </p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {destination.routes.map((route) => (
-                                                <span
+                                                <button
                                                     key={route.id}
-                                                    className="flex items-center gap-1.5 px-2 py-1 bg-white border rounded text-xs font-medium shadow-sm"
+                                                    onClick={() => onSelectRoute?.(selectedRoute === route.id ? null : route.id)}
+                                                    className={`flex items-center gap-1.5 px-2 py-1 border rounded text-xs font-medium shadow-sm transition-all cursor-pointer hover:scale-105 ${selectedRoute === route.id
+                                                            ? 'ring-2 ring-offset-1 ring-blue-500 bg-blue-50'
+                                                            : 'bg-white hover:bg-gray-50'
+                                                        }`}
                                                 >
                                                     <span
                                                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                                         style={{ backgroundColor: getRouteColor(route.id) }}
                                                     />
                                                     {route.id}
-                                                </span>
+                                                </button>
                                             ))}
                                         </div>
                                     </div>

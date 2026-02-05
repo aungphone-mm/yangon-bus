@@ -19,6 +19,7 @@ interface MapViewProps {
   transferPoints?: Stop[];
   currentPath?: PathResult | null;
   highlightedStops?: Stop[]; // Stops to highlight with their route polylines
+  selectedRouteFilter?: string | null; // Filter to show only this route
   stopLookup?: StopLookup | null;
   graph?: PlannerGraph | null;
   onStopClick?: (stop: Stop) => void;
@@ -49,6 +50,7 @@ export default function MapView({
   transferPoints = [],
   currentPath = null,
   highlightedStops = [],
+  selectedRouteFilter = null,
   stopLookup = null,
   graph = null,
   onStopClick,
@@ -618,7 +620,11 @@ export default function MapView({
 
         // Draw polylines for each route
         routeIds.forEach((routeId) => {
+          // Skip if we have a filter and this route doesn't match
+          if (selectedRouteFilter && selectedRouteFilter !== routeId) return;
+
           const color = routeColorMap.get(routeId) || '#3b82f6';
+          const isSelected = !selectedRouteFilter || selectedRouteFilter === routeId;
 
           // Iterate through all edges in the graph
           Object.entries(graph.adjacency).forEach(([fromIdStr, edges]) => {
@@ -635,8 +641,8 @@ export default function MapView({
                 [[fromNode.lat, fromNode.lng], [toNode.lat, toNode.lng]],
                 {
                   color: color,
-                  weight: 4,
-                  opacity: 0.6,
+                  weight: isSelected ? 5 : 3,
+                  opacity: isSelected ? 0.9 : 0.3,
                   smoothFactor: 1
                 }
               ).addTo(map);
@@ -669,7 +675,7 @@ export default function MapView({
     }
 
     setTimeout(() => drawHighlightedRoutes(), 50);
-  }, [highlightedStops, graph, currentPath]);
+  }, [highlightedStops, graph, currentPath, selectedRouteFilter]);
 
   // Center on selected stop
   useEffect(() => {
