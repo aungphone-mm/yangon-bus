@@ -402,8 +402,11 @@ function findPathWithTransferOptimization(
   endId: number,
   avoidSegments: Set<string> = new Set()
 ): PathResult {
+  console.log('[Pathfinder] Starting optimization', { startId, endId, typeofStart: typeof startId, typeofEnd: typeof endId });
+
   // Edge cases
   if (startId === endId) {
+    console.log('[Pathfinder] Same start and end');
     return {
       found: true,
       path: [startId],
@@ -415,7 +418,15 @@ function findPathWithTransferOptimization(
     };
   }
 
+  console.log('[Pathfinder] Checking adjacency...', {
+    startAdjExists: !!graph.adjacency[startId],
+    endAdjExists: !!graph.adjacency[endId],
+    adjacencyKeys: Object.keys(graph.adjacency).slice(0, 5),
+    totalAdjacency: Object.keys(graph.adjacency).length
+  });
+
   if (!graph.adjacency[startId] || !graph.adjacency[endId]) {
+    console.log('[Pathfinder] Missing adjacency for start or end!');
     return {
       found: false,
       path: [],
@@ -426,6 +437,8 @@ function findPathWithTransferOptimization(
       suggestedRoute: null,
     };
   }
+
+  console.log('[Pathfinder] Adjacency check passed, starting Dijkstra...');
 
   // Priority queue for Dijkstra
   const queue = new MinPriorityQueue<PathState>();
@@ -447,12 +460,30 @@ function findPathWithTransferOptimization(
   let bestDestCost = Infinity;
   let bestDestStateKey: string | null = null;
 
+  // Add iteration safety
+  let iterations = 0;
+  const MAX_ITERATIONS = 100000;
+
   while (!queue.isEmpty()) {
+    iterations++;
+
+    // Safety: prevent infinite loops
+    if (iterations > MAX_ITERATIONS) {
+      console.error('[Pathfinder] Max iterations reached!', { iterations, visited: visited.size });
+      break;
+    }
+
+    // Log progress every 10000 iterations
+    if (iterations % 10000 === 0) {
+      console.log('[Pathfinder] Progress', { iterations, visited: visited.size });
+    }
+
     const state = queue.dequeue()!;
     const stateKey = `${state.stopId}:${state.currentRoute || 'null'}`;
 
     // Early termination: if we're processing a state with cost higher than best destination, we're done
     if (state.cost > bestDestCost) {
+      console.log('[Pathfinder] Early termination, found path', { iterations, bestDestCost });
       break;
     }
 
@@ -477,7 +508,7 @@ function findPathWithTransferOptimization(
         const isTransfer = state.currentRoute !== null && state.currentRoute !== routeOption;
         const newTransfers = state.transfers + (isTransfer ? 1 : 0);
         const newStops = state.stops + 1;
-        
+
         // Apply penalty if this segment is in the avoid list
         const segmentKey = `${state.stopId}:${edge.to}:${routeOption}`;
         const penalty = avoidSegments.has(segmentKey) ? AVOID_PENALTY : 0;
@@ -511,8 +542,11 @@ function findPathWithTransferOptimization(
     }
   }
 
+  console.log('[Pathfinder] Algorithm complete', { iterations, bestDestStateKey, bestDestCost });
+
   // Reconstruct path from best destination state
   if (bestDestStateKey === null) {
+    console.log('[Pathfinder] No path found');
     return {
       found: false,
       path: [],
@@ -524,6 +558,7 @@ function findPathWithTransferOptimization(
     };
   }
 
+  console.log('[Pathfinder] Reconstructing path...');
   return reconstructPathWithRoutesFromStates(graph, parent, startId, endId, bestDestStateKey);
 }
 
@@ -541,7 +576,7 @@ export function findPathWithTransfers(
 
   for (let i = 0; i < maxRoutes; i++) {
     const result = findPathWithTransferOptimization(graph, startId, endId, avoidSegments);
-    
+
     if (!result.found) {
       if (i === 0) results.push(result);
       break;
@@ -553,7 +588,7 @@ export function findPathWithTransfers(
 
     if (!isDuplicate) {
       results.push(result);
-      
+
       // Add segments to avoid set
       for (const segment of result.segments) {
         if (segment.routeUsed) {

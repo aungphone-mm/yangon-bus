@@ -25,6 +25,20 @@ interface MapViewProps {
   zoom?: number;
 }
 
+// Helper function to check if map is ready with proper null checks
+function checkMapReady(map: any): boolean {
+  try {
+    if (!map || !map._loaded) return false;
+    const container = map.getContainer();
+    if (!container) return false;
+    const size = map.getSize();
+    if (!size) return false;
+    return size.x > 0 && size.y > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
 export default function MapView({
   stops = [],
   selectedStop,
@@ -163,12 +177,7 @@ export default function MapView({
     const map = mapInstanceRef.current;
 
     // Check if map is ready with proper container size
-    const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
-    };
+    const isMapReady = () => checkMapReady(map);
 
     const updateView = () => {
       try {
@@ -204,12 +213,7 @@ export default function MapView({
     const map = mapInstanceRef.current;
 
     // Check if map is ready with proper container size
-    const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
-    };
+    const isMapReady = () => checkMapReady(map);
 
     // Wait for map to be ready
     if (!isMapReady()) {
@@ -231,75 +235,75 @@ export default function MapView({
 
       // Add stop markers
       stops.forEach(stop => {
-      const isSelected = selectedStop?.id === stop.id;
-      const isOrigin = originStop?.id === stop.id;
-      const isDestination = destinationStop?.id === stop.id;
-      const isPreview = previewStop?.id === stop.id;
-      const isTransfer = transferPoints.some(t => t.id === stop.id);
-      const isHub = stop.is_hub;
+        const isSelected = selectedStop?.id === stop.id;
+        const isOrigin = originStop?.id === stop.id;
+        const isDestination = destinationStop?.id === stop.id;
+        const isPreview = previewStop?.id === stop.id;
+        const isTransfer = transferPoints.some(t => t.id === stop.id);
+        const isHub = stop.is_hub;
 
-      // Determine marker style
-      let bgColor, borderColor, textColor, label, iconSize;
+        // Determine marker style
+        let bgColor, borderColor, textColor, label, iconSize;
 
-      if (isPreview) {
-        bgColor = 'bg-blue-500';
-        borderColor = 'border-white';
-        textColor = 'text-white';
-        label = '?';
-        iconSize = [36, 36];
-      } else if (isOrigin) {
-        bgColor = 'bg-green-500';
-        borderColor = 'border-white';
-        textColor = 'text-white';
-        label = 'A';
-        iconSize = [32, 32];
-      } else if (isDestination) {
-        bgColor = 'bg-red-500';
-        borderColor = 'border-white';
-        textColor = 'text-white';
-        label = 'B';
-        iconSize = [32, 32];
-      } else if (isTransfer) {
-        bgColor = 'bg-orange-500';
-        borderColor = 'border-white';
-        textColor = 'text-white';
-        label = '⇄';
-        iconSize = [28, 28];
-      } else if (isSelected) {
-        bgColor = 'bg-primary';
-        borderColor = 'border-white';
-        textColor = 'text-white';
-        label = '';
-        iconSize = [30, 30];
-      } else if (isHub) {
-        bgColor = 'bg-yellow-400';
-        borderColor = 'border-yellow-600';
-        textColor = 'text-yellow-900';
-        label = 'H';
-        iconSize = [24, 24];
-      } else {
-        bgColor = 'bg-white';
-        borderColor = 'border-primary';
-        textColor = 'text-primary';
-        label = '';
-        iconSize = [24, 24];
-      }
+        if (isPreview) {
+          bgColor = 'bg-blue-500';
+          borderColor = 'border-white';
+          textColor = 'text-white';
+          label = '?';
+          iconSize = [36, 36];
+        } else if (isOrigin) {
+          bgColor = 'bg-green-500';
+          borderColor = 'border-white';
+          textColor = 'text-white';
+          label = 'A';
+          iconSize = [32, 32];
+        } else if (isDestination) {
+          bgColor = 'bg-red-500';
+          borderColor = 'border-white';
+          textColor = 'text-white';
+          label = 'B';
+          iconSize = [32, 32];
+        } else if (isTransfer) {
+          bgColor = 'bg-orange-500';
+          borderColor = 'border-white';
+          textColor = 'text-white';
+          label = '⇄';
+          iconSize = [28, 28];
+        } else if (isSelected) {
+          bgColor = 'bg-primary';
+          borderColor = 'border-white';
+          textColor = 'text-white';
+          label = '';
+          iconSize = [30, 30];
+        } else if (isHub) {
+          bgColor = 'bg-yellow-400';
+          borderColor = 'border-yellow-600';
+          textColor = 'text-yellow-900';
+          label = 'H';
+          iconSize = [24, 24];
+        } else {
+          bgColor = 'bg-white';
+          borderColor = 'border-primary';
+          textColor = 'text-primary';
+          label = '';
+          iconSize = [24, 24];
+        }
 
-      const icon = L.divIcon({
-        className: 'custom-marker',
-        html: `
+        const icon = L.divIcon({
+          className: 'custom-marker',
+          html: `
           <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${bgColor} ${borderColor} ${textColor}"
             style="transform: translate(-50%, -50%);">
             ${label}
           </div>
         `,
-        iconSize: iconSize,
-        iconAnchor: [iconSize[0] / 2, iconSize[1] / 2],
-      });
+          iconSize: iconSize,
+          iconAnchor: [iconSize[0] / 2, iconSize[1] / 2],
+        });
 
-      const marker = L.marker([stop.lat, stop.lng], { icon })
-        .addTo(map)
-        .bindPopup(`
+        const marker = L.marker([stop.lat, stop.lng], { icon })
+          .addTo(map)
+          .bindPopup(`
           <div class="p-2">
             <strong>${stop.name_en}</strong><br>
             <span class="text-gray-500">${stop.name_mm}</span><br>
@@ -308,13 +312,13 @@ export default function MapView({
           </div>
         `);
 
-      marker.on('click', () => {
-        onStopClick?.(stop);
-      });
+        marker.on('click', () => {
+          onStopClick?.(stop);
+        });
 
-      markersRef.current.push(marker);
-    });
-  }
+        markersRef.current.push(marker);
+      });
+    }
   }, [stops, selectedStop, originStop, destinationStop, previewStop, transferPoints, onStopClick]);
 
   // Handle User Location Marker
@@ -325,12 +329,7 @@ export default function MapView({
     const map = mapInstanceRef.current;
 
     // Check if map is ready
-    const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
-    };
+    const isMapReady = () => checkMapReady(map);
 
     const addUserMarker = () => {
       try {
@@ -435,12 +434,19 @@ export default function MapView({
     const L = window.L;
     const map = mapInstanceRef.current;
 
-    // Check if map is ready
+    // Check if map is ready with better error handling
     const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
+      try {
+        if (!map || !map._loaded) return false;
+        const container = map.getContainer();
+        if (!container) return false;
+        const size = map.getSize();
+        if (!size) return false;
+        return size.x > 0 && size.y > 0;
+      } catch (e) {
+        console.warn('Map ready check failed:', e);
+        return false;
+      }
     };
 
     const drawPolylines = () => {
@@ -569,12 +575,7 @@ export default function MapView({
     const map = mapInstanceRef.current;
 
     // Check if map is ready with proper container size
-    const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
-    };
+    const isMapReady = () => checkMapReady(map);
 
     const centerOnStop = () => {
       try {
@@ -606,12 +607,7 @@ export default function MapView({
     const map = mapInstanceRef.current;
 
     // Check if map is ready
-    const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
-    };
+    const isMapReady = () => checkMapReady(map);
 
     const centerOnPreview = () => {
       try {
@@ -646,20 +642,15 @@ export default function MapView({
 
     // Only center when exactly one of origin/destination is set (not both)
     const stopToCenter = originStop && !destinationStop ? originStop
-                       : destinationStop && !originStop ? destinationStop
-                       : null;
+      : destinationStop && !originStop ? destinationStop
+        : null;
 
     if (!stopToCenter) return;
 
     const map = mapInstanceRef.current;
 
     // Check if map is ready
-    const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
-    };
+    const isMapReady = () => checkMapReady(map);
 
     const centerOnStop = () => {
       try {
@@ -692,12 +683,7 @@ export default function MapView({
     const map = mapInstanceRef.current;
 
     // Check if map is ready
-    const isMapReady = () => {
-      return map._loaded &&
-             map.getContainer() &&
-             map.getSize().x > 0 &&
-             map.getSize().y > 0;
-    };
+    const isMapReady = () => checkMapReady(map);
 
     const fitBounds = () => {
       try {
@@ -706,6 +692,11 @@ export default function MapView({
           console.warn('Invalid coordinates for bounds:', { originStop, destinationStop });
           return;
         }
+
+        console.log('Fitting bounds:', {
+          origin: [originStop.lat, originStop.lng],
+          dest: [destinationStop.lat, destinationStop.lng]
+        });
 
         map.invalidateSize();
 
@@ -717,7 +708,7 @@ export default function MapView({
 
         // Validate bounds before fitting
         if (!bounds.isValid()) {
-          console.warn('Invalid bounds:', bounds);
+          console.warn('Invalid bounds check failed:', bounds);
           return;
         }
 
@@ -769,9 +760,8 @@ export default function MapView({
           <>
             <button
               onClick={() => setIsMapLocked(!isMapLocked)}
-              className={`bg-white rounded-lg shadow-lg p-2.5 hover:bg-gray-50 active:bg-gray-100 transition-all ${
-                !isMapLocked ? 'ring-2 ring-green-500' : ''
-              }`}
+              className={`bg-white rounded-lg shadow-lg p-2.5 hover:bg-gray-50 active:bg-gray-100 transition-all ${!isMapLocked ? 'ring-2 ring-green-500' : ''
+                }`}
               aria-label={isMapLocked ? "မြေပုံသော့ဖွင့်ရန်" : "မြေပုံသော့ခတ်ရန်"}
               title={isMapLocked ? "မြေပုံကိုရွှေ့လျားကြည့်ရန် သော့ဖွင့်ပါ" : "မြေပုံကိုသော့ခတ်ပါ"}
             >

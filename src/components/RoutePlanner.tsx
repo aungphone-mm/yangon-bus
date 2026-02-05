@@ -93,7 +93,12 @@ export default function RoutePlanner({
       // Use setTimeout for better UI responsiveness
       const timeoutId = setTimeout(() => {
         try {
+          console.log('Starting pathfinding...', { origin: origin.id, dest: destination.id });
+          const startTime = performance.now();
           const pathResults = findPathWithTransfers(graph, origin.id, destination.id);
+          const endTime = performance.now();
+          console.log(`Pathfinding complete in ${endTime - startTime}ms`, pathResults);
+
           setResults(pathResults);
           setSelectedIndex(0);
           onPathFoundRef.current?.(pathResults);
@@ -285,11 +290,10 @@ export default function RoutePlanner({
                       handleRouteSelect(idx);
                       setExpandedDetails(expandedDetails === idx ? null : idx);
                     }}
-                    className={`w-full px-3 py-2 text-sm font-medium text-left transition-all duration-300 ${
-                      selectedIndex === idx
+                    className={`w-full px-3 py-2 text-sm font-medium text-left transition-all duration-300 ${selectedIndex === idx
                         ? 'bg-primary text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     YBS {r.suggestedRoute} ({r.totalStops} မှတ်တိုင်)
                   </button>
@@ -354,16 +358,14 @@ export default function RoutePlanner({
                           <div key={index} className="flex gap-3">
                             {/* Line indicator */}
                             <div className="flex flex-col items-center">
-                              <div className={`w-3 h-3 rounded-full ${
-                                index === 0
+                              <div className={`w-3 h-3 rounded-full ${index === 0
                                   ? 'bg-green-500'
                                   : segment.isTransferPoint
-                                  ? 'bg-orange-500'
-                                  : 'bg-gray-300'
-                              }`}></div>
-                              <div className={`w-0.5 flex-1 ${
-                                segment.isTransferPoint ? 'bg-orange-300' : 'bg-gray-200'
-                              }`}></div>
+                                    ? 'bg-orange-500'
+                                    : 'bg-gray-300'
+                                }`}></div>
+                              <div className={`w-0.5 flex-1 ${segment.isTransferPoint ? 'bg-orange-300' : 'bg-gray-200'
+                                }`}></div>
                               {index === r.segments.length - 1 && (
                                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
                               )}
