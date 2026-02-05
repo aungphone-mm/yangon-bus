@@ -588,22 +588,20 @@ export default function MapView({
         // Get all route IDs from highlighted stops
         const routeIds = new Set<string>();
         const routeColors = new Map<string, string>();
-        const routeNames = new Map<string, string>();
 
         highlightedStops.forEach(stop => {
           stop.routes.forEach(route => {
             routeIds.add(route.id);
             if (!routeColors.has(route.id)) {
               routeColors.set(route.id, `#${route.color}`);
-              routeNames.set(route.id, route.name);
             }
           });
         });
 
-        // Track which stops we've added labels for (to avoid duplicates)
-        const labeledStops = new Set<string>();
+        // Track routes at each stop for combined labels
+        const stopRoutes = new Map<string, { node: any, routes: Set<string> }>();
 
-        // Draw polylines for each route
+        // Draw polylines for each route and collect stop-route info
         routeIds.forEach((routeId) => {
           const color = routeColors.get(routeId) || '#3b82f6';
           let edgeCount = 0;
@@ -638,75 +636,18 @@ export default function MapView({
 
               polylinesRef.current.push(polyline);
 
-              // Add stop label at fromNode (if not already added)
-              const fromKey = `${fromIdStr}-${routeId}`;
-              if (!labeledStops.has(fromKey)) {
-                labeledStops.add(fromKey);
-
-                const stopLabel = L.divIcon({
-                  className: 'stop-label',
-                  html: `
-                    <div style="
-                      background: white;
-                      border: 2px solid ${color};
-                      border-radius: 6px;
-                      padding: 3px 6px;
-                      font-size: 10px;
-                      font-weight: 500;
-                      white-space: nowrap;
-                      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                      pointer-events: none;
-                    ">
-                      <div style="color: #374151; font-weight: 600;">${fromNode.name_en}</div>
-                      <div style="color: ${color}; font-size: 9px;">YBS ${routeId}</div>
-                    </div>
-                  `,
-                  iconSize: [0, 0],
-                  iconAnchor: [-5, 10]
-                });
-
-                const labelMarker = L.marker([fromNode.lat, fromNode.lng], {
-                  icon: stopLabel,
-                  interactive: false
-                }).addTo(map);
-
-                polylinesRef.current.push(labelMarker);
+              // Collect routes at fromNode
+              if (!stopRoutes.has(fromIdStr)) {
+                stopRoutes.set(fromIdStr, { node: fromNode, routes: new Set() });
               }
+              stopRoutes.get(fromIdStr)!.routes.add(routeId);
 
-              // Add stop label at toNode (if not already added)
-              const toKey = `${edge.to}-${routeId}`;
-              if (!labeledStops.has(toKey)) {
-                labeledStops.add(toKey);
-
-                const stopLabel = L.divIcon({
-                  className: 'stop-label',
-                  html: `
-                    <div style="
-                      background: white;
-                      border: 2px solid ${color};
-                      border-radius: 6px;
-                      padding: 3px 6px;
-                      font-size: 10px;
-                      font-weight: 500;
-                      white-space: nowrap;
-                      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                      pointer-events: none;
-                    ">
-                      <div style="color: #374151; font-weight: 600;">${toNode.name_en}</div>
-                      <div style="color: ${color}; font-size: 9px;">YBS ${routeId}</div>
-                    </div>
-                  `,
-                  iconSize: [0, 0],
-                  iconAnchor: [-5, 10]
-                });
-
-                const labelMarker = L.marker([toNode.lat, toNode.lng], {
-                  icon: stopLabel,
-                  interactive: false
-                }).addTo(map);
-
-                polylinesRef.current.push(labelMarker);
+              // Collect routes at toNode
+              const toIdStr = edge.to.toString();
+              if (!stopRoutes.has(toIdStr)) {
+                stopRoutes.set(toIdStr, { node: toNode, routes: new Set() });
               }
+              stopRoutes.get(toIdStr)!.routes.add(routeId);
 
               // Add direction arrows every few edges
               if (edgeCount % 8 === 0) {
@@ -746,6 +687,54 @@ export default function MapView({
               edgeCount++;
             });
           });
+        });
+
+        // Now create ONE label per stop showing ALL routes
+        stopRoutes.forEach(({ node, routes }) => {
+          const routeList = Array.from(routes).sort();
+
+          // Create colored route badges
+          const routeBadges = routeList.map(routeId => {
+            const color = routeColors.get(routeId) || '#3b82f6';
+            return `<span style="
+              display: inline-block;
+              background: ${color};
+              color: white;
+              padding: 1px 4px;
+              border-radius: 3px;
+              font-size: 8px;
+              font-weight: 600;
+              margin: 1px;
+            ">${routeId}</span>`;
+          }).join('');
+
+          const stopLabel = L.divIcon({
+            className: 'stop-label',
+            html: `
+              <div style="
+                background: white;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                padding: 4px 6px;
+                font-size: 10px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+                pointer-events: none;
+                max-width: 120px;
+              ">
+                <div style="color: #374151; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${node.name_en}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 1px;">${routeBadges}</div>
+              </div>
+            `,
+            iconSize: [0, 0],
+            iconAnchor: [-5, 10]
+          });
+
+          const labelMarker = L.marker([node.lat, node.lng], {
+            icon: stopLabel,
+            interactive: false
+          }).addTo(map);
+
+          polylinesRef.current.push(labelMarker);
         });
       } catch (e) {
         console.error('Error drawing highlighted routes:', e);
