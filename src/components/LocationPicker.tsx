@@ -247,47 +247,74 @@ export default function LocationPicker({
                     </div>
 
                     {/* Route List - Separate sections for Origin and Destination */}
-                    <div className="mt-4 space-y-3">
-                        {/* Origin Routes */}
-                        {origin && origin.routes.length > 0 && (
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                    <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">A</span>
-                                    {origin.name_en} မှတ်တိုင်မှ ({origin.routes.length} လမ်းကြောင်း)
-                                </p>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {origin.routes.map((route) => (
-                                        <span
-                                            key={route.id}
-                                            className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium"
-                                        >
-                                            {route.id}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                    {(() => {
+                        // Collect all unique routes to assign colors consistently
+                        const allRouteIds: string[] = [];
+                        origin?.routes.forEach(r => { if (!allRouteIds.includes(r.id)) allRouteIds.push(r.id); });
+                        destination?.routes.forEach(r => { if (!allRouteIds.includes(r.id)) allRouteIds.push(r.id); });
 
-                        {/* Destination Routes */}
-                        {destination && destination.routes.length > 0 && (
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                    <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">B</span>
-                                    {destination.name_en} မှတ်တိုင်မှ ({destination.routes.length} လမ်းကြောင်း)
-                                </p>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {destination.routes.map((route) => (
-                                        <span
-                                            key={route.id}
-                                            className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium"
-                                        >
-                                            {route.id}
-                                        </span>
-                                    ))}
-                                </div>
+                        const distinctColors = [
+                            '#e63946', '#2a9d8f', '#e9c46a', '#264653', '#f4a261',
+                            '#9b5de5', '#00bbf9', '#00f5d4', '#f15bb5', '#fee440',
+                            '#3b82f6', '#22c55e',
+                        ];
+                        const getRouteColor = (routeId: string) => {
+                            const index = allRouteIds.indexOf(routeId);
+                            return distinctColors[index % distinctColors.length];
+                        };
+
+                        return (
+                            <div className="mt-4 space-y-3">
+                                {/* Origin Routes */}
+                                {origin && origin.routes.length > 0 && (
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                            <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">A</span>
+                                            {origin.name_en} မှတ်တိုင်မှ ({origin.routes.length} လမ်းကြောင်း)
+                                        </p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {origin.routes.map((route) => (
+                                                <span
+                                                    key={route.id}
+                                                    className="flex items-center gap-1.5 px-2 py-1 bg-white border rounded text-xs font-medium shadow-sm"
+                                                >
+                                                    <span
+                                                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                        style={{ backgroundColor: getRouteColor(route.id) }}
+                                                    />
+                                                    {route.id}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Destination Routes */}
+                                {destination && destination.routes.length > 0 && (
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                            <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">B</span>
+                                            {destination.name_en} မှတ်တိုင်မှ ({destination.routes.length} လမ်းကြောင်း)
+                                        </p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {destination.routes.map((route) => (
+                                                <span
+                                                    key={route.id}
+                                                    className="flex items-center gap-1.5 px-2 py-1 bg-white border rounded text-xs font-medium shadow-sm"
+                                                >
+                                                    <span
+                                                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                        style={{ backgroundColor: getRouteColor(route.id) }}
+                                                    />
+                                                    {route.id}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        );
+                    })()}
                 </div>
             )}
         </div>
