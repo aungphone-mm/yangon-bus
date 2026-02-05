@@ -587,24 +587,38 @@ export default function MapView({
 
         // Get all route IDs from highlighted stops
         const routeIds = new Set<string>();
-        const routeColors = new Map<string, string>();
 
         highlightedStops.forEach(stop => {
           stop.routes.forEach(route => {
             routeIds.add(route.id);
-            if (!routeColors.has(route.id)) {
-              routeColors.set(route.id, `#${route.color}`);
-            }
           });
         });
 
-        // Track routes at each stop for combined labels
-        const stopRoutes = new Map<string, { node: any, routes: Set<string> }>();
+        // Distinct colors for each route
+        const distinctColors = [
+          '#e63946', // red
+          '#2a9d8f', // teal
+          '#e9c46a', // yellow
+          '#264653', // dark blue
+          '#f4a261', // orange
+          '#9b5de5', // purple
+          '#00bbf9', // cyan
+          '#00f5d4', // mint
+          '#f15bb5', // pink
+          '#fee440', // bright yellow
+          '#3b82f6', // blue
+          '#22c55e', // green
+        ];
 
-        // Draw polylines for each route and collect stop-route info
+        // Assign colors to routes
+        const routeColorMap = new Map<string, string>();
+        Array.from(routeIds).forEach((routeId, index) => {
+          routeColorMap.set(routeId, distinctColors[index % distinctColors.length]);
+        });
+
+        // Draw polylines for each route
         routeIds.forEach((routeId) => {
-          const color = routeColors.get(routeId) || '#3b82f6';
-          let edgeCount = 0;
+          const color = routeColorMap.get(routeId) || '#3b82f6';
 
           // Iterate through all edges in the graph
           Object.entries(graph.adjacency).forEach(([fromIdStr, edges]) => {
@@ -627,6 +641,7 @@ export default function MapView({
                 }
               ).addTo(map);
 
+              // Click on polyline to see route info
               polyline.bindPopup(`
                 <div class="p-2">
                   <strong>လမ်းကြောင်း: ${routeId}</strong><br>
@@ -635,106 +650,8 @@ export default function MapView({
               `);
 
               polylinesRef.current.push(polyline);
-
-              // Collect routes at fromNode
-              if (!stopRoutes.has(fromIdStr)) {
-                stopRoutes.set(fromIdStr, { node: fromNode, routes: new Set() });
-              }
-              stopRoutes.get(fromIdStr)!.routes.add(routeId);
-
-              // Collect routes at toNode
-              const toIdStr = edge.to.toString();
-              if (!stopRoutes.has(toIdStr)) {
-                stopRoutes.set(toIdStr, { node: toNode, routes: new Set() });
-              }
-              stopRoutes.get(toIdStr)!.routes.add(routeId);
-
-              // Add direction arrows every few edges
-              if (edgeCount % 8 === 0) {
-                const midLat = (fromNode.lat + toNode.lat) / 2;
-                const midLng = (fromNode.lng + toNode.lng) / 2;
-
-                const angle = Math.atan2(
-                  toNode.lat - fromNode.lat,
-                  toNode.lng - fromNode.lng
-                ) * 180 / Math.PI + 90;
-
-                const arrowIcon = L.divIcon({
-                  className: 'arrow-icon',
-                  html: `
-                    <div style="
-                      transform: rotate(${angle}deg);
-                      width: 0;
-                      height: 0;
-                      border-left: 5px solid transparent;
-                      border-right: 5px solid transparent;
-                      border-bottom: 10px solid ${color};
-                      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-                    "></div>
-                  `,
-                  iconSize: [10, 10],
-                  iconAnchor: [5, 5]
-                });
-
-                const arrowMarker = L.marker([midLat, midLng], {
-                  icon: arrowIcon,
-                  interactive: false
-                }).addTo(map);
-
-                polylinesRef.current.push(arrowMarker);
-              }
-
-              edgeCount++;
             });
           });
-        });
-
-        // Now create ONE label per stop showing ALL routes
-        stopRoutes.forEach(({ node, routes }) => {
-          const routeList = Array.from(routes).sort();
-
-          // Create colored route badges
-          const routeBadges = routeList.map(routeId => {
-            const color = routeColors.get(routeId) || '#3b82f6';
-            return `<span style="
-              display: inline-block;
-              background: ${color};
-              color: white;
-              padding: 1px 4px;
-              border-radius: 3px;
-              font-size: 8px;
-              font-weight: 600;
-              margin: 1px;
-            ">${routeId}</span>`;
-          }).join('');
-
-          const stopLabel = L.divIcon({
-            className: 'stop-label',
-            html: `
-              <div style="
-                background: white;
-                border: 1px solid #d1d5db;
-                border-radius: 6px;
-                padding: 4px 6px;
-                font-size: 10px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-                pointer-events: none;
-                max-width: 120px;
-              ">
-                <div style="color: #374151; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${node.name_en}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 1px;">${routeBadges}</div>
-              </div>
-            `,
-            iconSize: [0, 0],
-            iconAnchor: [-5, 10]
-          });
-
-          const labelMarker = L.marker([node.lat, node.lng], {
-            icon: stopLabel,
-            interactive: false
-          }).addTo(map);
-
-          polylinesRef.current.push(labelMarker);
         });
       } catch (e) {
         console.error('Error drawing highlighted routes:', e);
@@ -974,8 +891,51 @@ export default function MapView({
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 text-[10px] sm:text-xs z-[1000] max-w-[calc(100%-6rem)]">
-        {(originStop || destinationStop) ? (
+      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 text-[10px] sm:text-xs z-[1000] max-w-[200px]">
+        {highlightedStops.length > 0 ? (
+          <>
+            {/* Route Colors Legend for Picker Tab */}
+            <div className="mb-2">
+              {originStop && (
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-[10px]">A</div>
+                  <span className="truncate">စတင်ရာ</span>
+                </div>
+              )}
+              {destinationStop && (
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-[10px]">B</div>
+                  <span className="truncate">ရောက်ရာ</span>
+                </div>
+              )}
+            </div>
+            <div className="border-t border-gray-200 pt-2">
+              <p className="text-[9px] text-gray-500 mb-1">လမ်းကြောင်းများ</p>
+              <div className="space-y-1 max-h-[120px] overflow-y-auto">
+                {(() => {
+                  const distinctColors = [
+                    '#e63946', '#2a9d8f', '#e9c46a', '#264653', '#f4a261',
+                    '#9b5de5', '#00bbf9', '#00f5d4', '#f15bb5', '#fee440',
+                    '#3b82f6', '#22c55e',
+                  ];
+                  const routeIds = new Set<string>();
+                  highlightedStops.forEach(stop => {
+                    stop.routes.forEach(route => routeIds.add(route.id));
+                  });
+                  return Array.from(routeIds).map((routeId, index) => (
+                    <div key={routeId} className="flex items-center gap-1.5">
+                      <div
+                        className="w-3 h-3 rounded-sm flex-shrink-0"
+                        style={{ backgroundColor: distinctColors[index % distinctColors.length] }}
+                      />
+                      <span className="truncate">{routeId}</span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </>
+        ) : (originStop || destinationStop) ? (
           <>
             {originStop && (
               <div className="flex items-center gap-1.5 sm:gap-2 mb-1">

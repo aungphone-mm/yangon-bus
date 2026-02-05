@@ -245,6 +245,53 @@ export default function LocationPicker({
                             <p className="text-xs text-gray-500 truncate">{destination?.township_en}</p>
                         </div>
                     </div>
+
+                    {/* Route List with Colors */}
+                    {(() => {
+                        // Get all unique routes from both stops
+                        const allRoutes = new Map<string, { id: string; name: string; color: string }>();
+                        const distinctColors = [
+                            '#e63946', '#2a9d8f', '#e9c46a', '#264653', '#f4a261',
+                            '#9b5de5', '#00bbf9', '#00f5d4', '#f15bb5', '#fee440',
+                            '#3b82f6', '#22c55e',
+                        ];
+
+                        origin?.routes.forEach(route => {
+                            if (!allRoutes.has(route.id)) {
+                                allRoutes.set(route.id, route);
+                            }
+                        });
+                        destination?.routes.forEach(route => {
+                            if (!allRoutes.has(route.id)) {
+                                allRoutes.set(route.id, route);
+                            }
+                        });
+
+                        const routeList = Array.from(allRoutes.values());
+
+                        return routeList.length > 0 && (
+                            <div className="mt-4">
+                                <p className="text-sm font-medium text-gray-700 mb-2">
+                                    🚌 ရရှိနိုင်သော ဘတ်စ်ကား ({routeList.length} လမ်းကြောင်း)
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {routeList.map((route, index) => (
+                                        <div
+                                            key={route.id}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border shadow-sm"
+                                        >
+                                            <div
+                                                className="w-3 h-3 rounded-full"
+                                                style={{ backgroundColor: distinctColors[index % distinctColors.length] }}
+                                            />
+                                            <span className="font-medium text-sm">{route.id}</span>
+                                            <span className="text-xs text-gray-500 hidden sm:inline">{route.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
             )}
         </div>
