@@ -9,6 +9,7 @@ import StopDetail from '@/components/StopDetail';
 import RoutePlanner from '@/components/RoutePlanner';
 import RouteSearch from '@/components/RouteSearch';
 import InstallButton from '@/components/InstallButton';
+import LocationPicker from '@/components/LocationPicker';
 
 // Dynamic import for map (avoid SSR issues with Leaflet)
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -20,7 +21,7 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   ),
 });
 
-type Tab = 'search' | 'planner' | 'favorites' | 'hubs' | 'all-routes';
+type Tab = 'search' | 'planner' | 'picker' | 'favorites' | 'hubs' | 'all-routes';
 
 export default function Home() {
   const [stopLookup, setStopLookup] = useState<StopLookup | null>(null);
@@ -38,6 +39,11 @@ export default function Home() {
   const [plannerOrigin, setPlannerOrigin] = useState<Stop | null>(null);
   const [plannerDestination, setPlannerDestination] = useState<Stop | null>(null);
   const [plannerPreviewStop, setPlannerPreviewStop] = useState<Stop | null>(null);
+
+  // Picker tab states
+  const [pickerOrigin, setPickerOrigin] = useState<Stop | null>(null);
+  const [pickerDestination, setPickerDestination] = useState<Stop | null>(null);
+  const [pickerPreviewStop, setPickerPreviewStop] = useState<Stop | null>(null);
 
   // Favorites hook
   const {
@@ -210,6 +216,13 @@ export default function Home() {
       if (plannerDestination) stops.push(plannerDestination);
       return stops;
     }
+    if (activeTab === 'picker') {
+      const stops = [];
+      if (pickerPreviewStop) stops.push(pickerPreviewStop);
+      if (pickerOrigin) stops.push(pickerOrigin);
+      if (pickerDestination) stops.push(pickerDestination);
+      return stops;
+    }
     if (activeTab === 'all-routes') {
       return selectedRouteId ? filteredRouteStops : Object.values(stopLookup?.stops || {});
     }
@@ -225,7 +238,7 @@ export default function Home() {
     }
     if (selectedStop) return [selectedStop];
     return [];
-  }, [activeTab, hubStops, favoriteStops, plannerOrigin, plannerDestination, plannerPreviewStop, transferPoints, selectedRouteId, filteredRouteStops, stopLookup, selectedStop]);
+  }, [activeTab, hubStops, favoriteStops, plannerOrigin, plannerDestination, plannerPreviewStop, pickerOrigin, pickerDestination, pickerPreviewStop, transferPoints, selectedRouteId, filteredRouteStops, stopLookup, selectedStop]);
 
   if (loading) {
     return (
@@ -286,6 +299,7 @@ export default function Home() {
           <div className="flex gap-1 overflow-x-auto scrollbar-thin hover:scrollbar-visible snap-x snap-mandatory scroll-smooth">
             {[
               { id: 'planner' as Tab, label: 'လမ်းကြောင်းရှာရန်', shortLabel: 'လမ်းကြောင်းရှာရန်', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' },
+              { id: 'picker' as Tab, label: 'တည်နေရာရွေးရန်', shortLabel: 'တည်နေရာ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z' },
               { id: 'search' as Tab, label: 'ရှာဖွေရန်', shortLabel: 'မှတ်တိုင် or Bus', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
               { id: 'favorites' as Tab, label: 'အနှစ်သက်ဆုံး', shortLabel: 'အကြိုက်', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', badge: favoriteCount },
               { id: 'hubs' as Tab, label: 'လမ်းဆုံမှတ်တိုင်များ', shortLabel: 'လမ်းဆုံ', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' },
@@ -297,11 +311,10 @@ export default function Home() {
                   setActiveTab(tab.id);
                   setShowStopDetail(false);
                 }}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap snap-start ${
-                  activeTab === tab.id
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap snap-start ${activeTab === tab.id
+                  ? 'border-primary text-primary bg-primary/5'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  }`}
               >
                 <svg className="w-4 h-4 flex-shrink-0" fill={tab.id === 'favorites' && favoriteCount > 0 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
@@ -372,9 +385,8 @@ export default function Home() {
                             onClick={() => handleStopSelect(stop)}
                             className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
                           >
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                              stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
-                            }`}>
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
+                              }`}>
                               {stop.is_hub ? 'H' : ''}
                             </div>
                             <div className="flex-1">
@@ -422,6 +434,18 @@ export default function Home() {
                   onOriginChange={setPlannerOrigin}
                   onDestinationChange={setPlannerDestination}
                   onPreviewStop={setPlannerPreviewStop}
+                />
+              </div>
+            )}
+
+            {/* Picker Tab */}
+            {activeTab === 'picker' && (
+              <div className="animate-fade-in">
+                <LocationPicker
+                  stopLookup={stopLookup}
+                  onOriginChange={setPickerOrigin}
+                  onDestinationChange={setPickerDestination}
+                  onPreviewStop={setPickerPreviewStop}
                 />
               </div>
             )}
@@ -661,9 +685,8 @@ export default function Home() {
                           onClick={() => handleStopSelect(stop)}
                           className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left"
                         >
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                            stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
-                          }`}>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${stop.is_hub ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-white border-primary text-primary'
+                            }`}>
                             {stop.is_hub ? 'H' : ''}
                           </div>
                           <div className="flex-1">
