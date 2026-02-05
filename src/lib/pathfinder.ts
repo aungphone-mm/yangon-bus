@@ -1,9 +1,65 @@
-import { PlannerGraph, PathResult, PathSegment, GraphEdge } from '@/types/transit';
+import { PlannerGraph, PathResult, PathSegment, GraphEdge, GraphNode } from '@/types/transit';
 
 // Algorithm constants
 const TRANSFER_PENALTY = 100;
 const STOP_COST = 1;
 const AVOID_PENALTY = 2000;
+
+// Walking constants
+const WALKING_DISTANCE_METERS = 500; // Max walking distance to consider
+const WALKING_SPEED_METERS_PER_MIN = 80; // Average walking speed (~5 km/h)
+const WALKING_BENEFIT_THRESHOLD = 50; // Min cost savings to suggest walking
+
+/**
+ * Calculate distance between two coordinates using Haversine formula
+ * Returns distance in meters
+ */
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000; // Earth's radius in meters
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Find stops within walking distance of a given stop
+ * Returns array of {stopId, distance} sorted by distance
+ */
+function findNearbyStops(
+  graph: PlannerGraph,
+  stopId: number,
+  maxDistance: number = WALKING_DISTANCE_METERS
+): Array<{ stopId: number; distance: number }> {
+  const sourceNode = graph.nodes[stopId];
+  if (!sourceNode) return [];
+
+  const nearbyStops: Array<{ stopId: number; distance: number }> = [];
+
+  for (const [id, node] of Object.entries(graph.nodes)) {
+    const nodeId = parseInt(id);
+    if (nodeId === stopId) continue;
+
+    // Must have adjacency (be part of a route)
+    if (!graph.adjacency[nodeId]) continue;
+
+    const distance = calculateDistance(
+      sourceNode.lat, sourceNode.lng,
+      node.lat, node.lng
+    );
+
+    if (distance <= maxDistance) {
+      nearbyStops.push({ stopId: nodeId, distance });
+    }
+  }
+
+  // Sort by distance
+  return nearbyStops.sort((a, b) => a.distance - b.distance);
+}
 
 // Priority Queue Implementation
 interface PriorityQueueItem<T> {
@@ -626,4 +682,191 @@ export function areDirectlyConnected(
 ): boolean {
   const edges = graph.adjacency[stopA] || [];
   return edges.some(e => e.to === stopB);
+}
+
+/**
+ * Find path with walking suggestions for origin and/or destination
+ * Returns the best route, potentially suggesting walking to a nearby stop
+ */
+export function findPathWithWalkingSuggestion(
+  graph: PlannerGraph,
+  startId: number,
+  endId: number
+): PathResult[] {
+  console.log('[WalkingSuggestion] Starting with walking optimization', { startId, endId });
+
+  // Find nearby stops for both origin and destination
+  const nearbyOrigins = findNearbyStops(graph, startId, WALKING_DISTANCE_METERS);
+  const nearbyDestinations = findNearbyStops(graph, endId, WALKING_DISTANCE_METERS);
+
+  console.log('[WalkingSuggestion] Found nearby stops', {
+    nearbyOrigins: nearbyOrigins.length,
+    nearbyDestinations: nearbyDestinations.length
+  });
+
+  // Get the direct route (no walking)
+  const directResults = findPathWithTransfers(graph, startId, endId);
+  const directBest = directResults[0];
+
+  if (!directBest?.found) {
+    // No direct route found, try walking to nearby stops
+    console.log('[WalkingSuggestion] No direct route, trying nearby stops');
+  }
+
+  const directCost = directBest?.found
+    ? (directBest.transfers * TRANSFER_PENALTY) + (directBest.totalStops * STOP_COST)
+    : Infinity;
+
+  let bestResult = directBest;
+  let bestCost = directCost;
+  let walkingOriginInfo: PathResult['walkingOrigin'] = undefined;
+  let walkingDestinationInfo: PathResult['walkingDestination'] = undefined;
+
+  // Try walking from origin to nearby stops
+  for (const nearby of nearbyOrigins.slice(0, 5)) { // Limit to 5 closest
+    const results = findPathWithTransfers(graph, nearby.stopId, endId);
+    const result = results[0];
+
+    if (result?.found) {
+      const walkingTimeMinutes = Math.ceil(nearby.distance / WALKING_SPEED_METERS_PER_MIN);
+      const cost = (result.transfers * TRANSFER_PENALTY) + (result.totalStops * STOP_COST);
+
+      // Check if walking to this stop provides significant benefit
+      if (cost + WALKING_BENEFIT_THRESHOLD < bestCost) {
+        console.log('[WalkingSuggestion] Better route found by walking to origin', {
+          nearbyStop: nearby.stopId,
+          walkingDistance: nearby.distance,
+          savings: bestCost - cost
+        });
+
+        const originNode = graph.nodes[startId];
+        const walkToNode = graph.nodes[nearby.stopId];
+
+        bestResult = result;
+        bestCost = cost;
+        walkingOriginInfo = {
+          originalStopId: startId,
+          originalStopName: originNode?.name_en || `Stop ${startId}`,
+          walkToStopId: nearby.stopId,
+          walkToStopName: walkToNode?.name_en || `Stop ${nearby.stopId}`,
+          distanceMeters: Math.round(nearby.distance),
+          timeMinutes: walkingTimeMinutes
+        };
+        walkingDestinationInfo = undefined; // Reset destination walking
+      }
+    }
+  }
+
+  // Try walking from nearby stops to destination
+  for (const nearby of nearbyDestinations.slice(0, 5)) { // Limit to 5 closest
+    const results = findPathWithTransfers(graph, startId, nearby.stopId);
+    const result = results[0];
+
+    if (result?.found) {
+      const walkingTimeMinutes = Math.ceil(nearby.distance / WALKING_SPEED_METERS_PER_MIN);
+      const cost = (result.transfers * TRANSFER_PENALTY) + (result.totalStops * STOP_COST);
+
+      // Check if this provides significant benefit
+      if (cost + WALKING_BENEFIT_THRESHOLD < bestCost) {
+        console.log('[WalkingSuggestion] Better route found by walking from destination', {
+          nearbyStop: nearby.stopId,
+          walkingDistance: nearby.distance,
+          savings: bestCost - cost
+        });
+
+        const destNode = graph.nodes[endId];
+        const walkFromNode = graph.nodes[nearby.stopId];
+
+        bestResult = result;
+        bestCost = cost;
+        walkingDestinationInfo = {
+          walkFromStopId: nearby.stopId,
+          walkFromStopName: walkFromNode?.name_en || `Stop ${nearby.stopId}`,
+          originalStopId: endId,
+          originalStopName: destNode?.name_en || `Stop ${endId}`,
+          distanceMeters: Math.round(nearby.distance),
+          timeMinutes: walkingTimeMinutes
+        };
+        walkingOriginInfo = undefined; // Reset origin walking
+      }
+    }
+  }
+
+  // Try combinations: walk from origin AND walk to destination
+  for (const nearbyOrigin of nearbyOrigins.slice(0, 3)) {
+    for (const nearbyDest of nearbyDestinations.slice(0, 3)) {
+      const results = findPathWithTransfers(graph, nearbyOrigin.stopId, nearbyDest.stopId);
+      const result = results[0];
+
+      if (result?.found) {
+        const cost = (result.transfers * TRANSFER_PENALTY) + (result.totalStops * STOP_COST);
+
+        // Need significant benefit for both walking
+        if (cost + (WALKING_BENEFIT_THRESHOLD * 2) < bestCost) {
+          console.log('[WalkingSuggestion] Better route found with walking at both ends', {
+            originWalk: nearbyOrigin.stopId,
+            destWalk: nearbyDest.stopId,
+            savings: bestCost - cost
+          });
+
+          const originNode = graph.nodes[startId];
+          const walkToNode = graph.nodes[nearbyOrigin.stopId];
+          const destNode = graph.nodes[endId];
+          const walkFromNode = graph.nodes[nearbyDest.stopId];
+
+          bestResult = result;
+          bestCost = cost;
+          walkingOriginInfo = {
+            originalStopId: startId,
+            originalStopName: originNode?.name_en || `Stop ${startId}`,
+            walkToStopId: nearbyOrigin.stopId,
+            walkToStopName: walkToNode?.name_en || `Stop ${nearbyOrigin.stopId}`,
+            distanceMeters: Math.round(nearbyOrigin.distance),
+            timeMinutes: Math.ceil(nearbyOrigin.distance / WALKING_SPEED_METERS_PER_MIN)
+          };
+          walkingDestinationInfo = {
+            walkFromStopId: nearbyDest.stopId,
+            walkFromStopName: walkFromNode?.name_en || `Stop ${nearbyDest.stopId}`,
+            originalStopId: endId,
+            originalStopName: destNode?.name_en || `Stop ${endId}`,
+            distanceMeters: Math.round(nearbyDest.distance),
+            timeMinutes: Math.ceil(nearbyDest.distance / WALKING_SPEED_METERS_PER_MIN)
+          };
+        }
+      }
+    }
+  }
+
+  // Attach walking info to result
+  if (bestResult) {
+    bestResult.walkingOrigin = walkingOriginInfo;
+    bestResult.walkingDestination = walkingDestinationInfo;
+  }
+
+  // Build final results array
+  const finalResults: PathResult[] = [];
+
+  if (bestResult?.found) {
+    finalResults.push(bestResult);
+  }
+
+  // Include direct route as alternative if different
+  if (directBest?.found && bestResult !== directBest) {
+    finalResults.push(directBest);
+  }
+
+  // Add remaining alternatives from direct results
+  for (let i = 1; i < directResults.length && finalResults.length < 3; i++) {
+    if (directResults[i]?.found) {
+      finalResults.push(directResults[i]);
+    }
+  }
+
+  console.log('[WalkingSuggestion] Final results', {
+    count: finalResults.length,
+    hasWalkingOrigin: !!walkingOriginInfo,
+    hasWalkingDestination: !!walkingDestinationInfo
+  });
+
+  return finalResults;
 }

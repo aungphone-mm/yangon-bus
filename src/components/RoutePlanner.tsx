@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Stop, StopLookup, PlannerGraph, PathResult } from '@/types/transit';
-import { findPathWithTransfers } from '@/lib/pathfinder';
+import { findPathWithTransfers, findPathWithWalkingSuggestion } from '@/lib/pathfinder';
 import StopSearch from './StopSearch';
 
 interface RoutePlannerProps {
@@ -95,7 +95,7 @@ export default function RoutePlanner({
         try {
           console.log('Starting pathfinding...', { origin: origin.id, dest: destination.id });
           const startTime = performance.now();
-          const pathResults = findPathWithTransfers(graph, origin.id, destination.id);
+          const pathResults = findPathWithWalkingSuggestion(graph, origin.id, destination.id);
           const endTime = performance.now();
           console.log(`Pathfinding complete in ${endTime - startTime}ms`, pathResults);
 
@@ -291,8 +291,8 @@ export default function RoutePlanner({
                       setExpandedDetails(expandedDetails === idx ? null : idx);
                     }}
                     className={`w-full px-3 py-2 text-sm font-medium text-left transition-all duration-300 ${selectedIndex === idx
-                        ? 'bg-primary text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                   >
                     YBS {r.suggestedRoute} ({r.totalStops} မှတ်တိုင်)
@@ -332,6 +332,44 @@ export default function RoutePlanner({
                         })}
                       </div>
                     )}
+
+                    {/* Walking Suggestions */}
+                    {(r.walkingOrigin || r.walkingDestination) && (
+                      <div className="mt-2 pt-2 border-t border-green-200">
+                        <p className="text-xs font-semibold text-blue-700 text-center mb-1 flex items-center justify-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                          </svg>
+                          ပိုကောင်းသောလမ်းကြောင်း
+                        </p>
+
+                        {r.walkingOrigin && (
+                          <div className="flex items-center justify-center gap-2 p-2 bg-blue-50 rounded-lg mb-1">
+                            <span className="text-lg">🚶</span>
+                            <div className="text-xs text-blue-800" style={{ fontFamily: 'Myanmar3, Padauk, sans-serif' }}>
+                              <strong>{r.walkingOrigin.originalStopName}</strong> မှ{' '}
+                              <strong>{r.walkingOrigin.walkToStopName}</strong> သို့ လမ်းလျှောက်ပါ
+                              <span className="ml-1 text-blue-600">
+                                ({r.walkingOrigin.distanceMeters}m, ~{r.walkingOrigin.timeMinutes}မိနစ်)
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {r.walkingDestination && (
+                          <div className="flex items-center justify-center gap-2 p-2 bg-blue-50 rounded-lg">
+                            <span className="text-lg">🚶</span>
+                            <div className="text-xs text-blue-800" style={{ fontFamily: 'Myanmar3, Padauk, sans-serif' }}>
+                              <strong>{r.walkingDestination.walkFromStopName}</strong> မှ{' '}
+                              <strong>{r.walkingDestination.originalStopName}</strong> သို့ လမ်းလျှောက်ပါ
+                              <span className="ml-1 text-blue-600">
+                                ({r.walkingDestination.distanceMeters}m, ~{r.walkingDestination.timeMinutes}မိနစ်)
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Expandable Details Section */}
@@ -359,10 +397,10 @@ export default function RoutePlanner({
                             {/* Line indicator */}
                             <div className="flex flex-col items-center">
                               <div className={`w-3 h-3 rounded-full ${index === 0
-                                  ? 'bg-green-500'
-                                  : segment.isTransferPoint
-                                    ? 'bg-orange-500'
-                                    : 'bg-gray-300'
+                                ? 'bg-green-500'
+                                : segment.isTransferPoint
+                                  ? 'bg-orange-500'
+                                  : 'bg-gray-300'
                                 }`}></div>
                               <div className={`w-0.5 flex-1 ${segment.isTransferPoint ? 'bg-orange-300' : 'bg-gray-200'
                                 }`}></div>

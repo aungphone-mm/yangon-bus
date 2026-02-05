@@ -89,6 +89,9 @@ export interface PathSegment {
   distance: number;
   routeUsed?: string; // The actual route used for this segment
   isTransferPoint?: boolean; // Whether to transfer at the destination of this segment
+  isWalkingSegment?: boolean; // True if this is a walking segment (no bus)
+  walkingDistanceMeters?: number; // Walking distance in meters
+  walkingTimeMinutes?: number; // Estimated walking time in minutes
 }
 
 export interface PathResult {
@@ -99,6 +102,23 @@ export interface PathResult {
   totalStops: number;
   transfers: number;
   suggestedRoute: string | null;
+  // Walking suggestions
+  walkingOrigin?: {
+    originalStopId: number;
+    originalStopName: string;
+    walkToStopId: number;
+    walkToStopName: string;
+    distanceMeters: number;
+    timeMinutes: number;
+  };
+  walkingDestination?: {
+    walkFromStopId: number;
+    walkFromStopName: string;
+    originalStopId: number;
+    originalStopName: string;
+    distanceMeters: number;
+    timeMinutes: number;
+  };
 }
 
 export interface SearchResult {
