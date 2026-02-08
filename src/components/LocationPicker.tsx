@@ -10,8 +10,8 @@ interface LocationPickerProps {
     onDestinationChange?: (stop: Stop | null) => void;
     onPreviewStop?: (stop: Stop | null) => void;
     onComplete?: (origin: Stop, destination: Stop) => void;
-    selectedRoute?: string | null;
-    onSelectRoute?: (routeId: string | null) => void;
+    selectedRoutes?: string[];
+    onSelectRoutes?: (routeIds: string[]) => void;
 }
 
 export default function LocationPicker({
@@ -20,8 +20,8 @@ export default function LocationPicker({
     onDestinationChange,
     onPreviewStop,
     onComplete,
-    selectedRoute = null,
-    onSelectRoute,
+    selectedRoutes = [],
+    onSelectRoutes,
 }: LocationPickerProps) {
     const [origin, setOrigin] = useState<Stop | null>(null);
     const [destination, setDestination] = useState<Stop | null>(null);
@@ -277,22 +277,31 @@ export default function LocationPicker({
                                             {origin.name_en} မှတ်တိုင်မှ ({origin.routes.length} လမ်းကြောင်း)
                                         </p>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {origin.routes.map((route) => (
-                                                <button
-                                                    key={route.id}
-                                                    onClick={() => onSelectRoute?.(selectedRoute === route.id ? null : route.id)}
-                                                    className={`flex items-center gap-1.5 px-2 py-1 border rounded text-xs font-medium shadow-sm transition-all cursor-pointer hover:scale-105 ${selectedRoute === route.id
-                                                        ? 'ring-2 ring-offset-1 ring-blue-500 bg-blue-50'
-                                                        : 'bg-white hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    <span
-                                                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                                        style={{ backgroundColor: getRouteColor(route.id) }}
-                                                    />
-                                                    {route.id}
-                                                </button>
-                                            ))}
+                                            {origin.routes.map((route) => {
+                                                const isSelected = selectedRoutes.includes(route.id);
+                                                return (
+                                                    <button
+                                                        key={route.id}
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                onSelectRoutes?.(selectedRoutes.filter(id => id !== route.id));
+                                                            } else {
+                                                                onSelectRoutes?.([...selectedRoutes, route.id]);
+                                                            }
+                                                        }}
+                                                        className={`flex items-center gap-1.5 px-2 py-1 border rounded text-xs font-medium shadow-sm transition-all cursor-pointer hover:scale-105 ${isSelected
+                                                            ? 'ring-2 ring-offset-1 ring-blue-500 bg-blue-50'
+                                                            : 'bg-white hover:bg-gray-50'
+                                                            }`}
+                                                    >
+                                                        <span
+                                                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                            style={{ backgroundColor: getRouteColor(route.id) }}
+                                                        />
+                                                        {route.id}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
@@ -305,22 +314,31 @@ export default function LocationPicker({
                                             {destination.name_en} မှတ်တိုင်မှ ({destination.routes.length} လမ်းကြောင်း)
                                         </p>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {destination.routes.map((route) => (
-                                                <button
-                                                    key={route.id}
-                                                    onClick={() => onSelectRoute?.(selectedRoute === route.id ? null : route.id)}
-                                                    className={`flex items-center gap-1.5 px-2 py-1 border rounded text-xs font-medium shadow-sm transition-all cursor-pointer hover:scale-105 ${selectedRoute === route.id
+                                            {destination.routes.map((route) => {
+                                                const isSelected = selectedRoutes.includes(route.id);
+                                                return (
+                                                    <button
+                                                        key={route.id}
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                onSelectRoutes?.(selectedRoutes.filter(id => id !== route.id));
+                                                            } else {
+                                                                onSelectRoutes?.([...selectedRoutes, route.id]);
+                                                            }
+                                                        }}
+                                                        className={`flex items-center gap-1.5 px-2 py-1 border rounded text-xs font-medium shadow-sm transition-all cursor-pointer hover:scale-105 ${isSelected
                                                             ? 'ring-2 ring-offset-1 ring-blue-500 bg-blue-50'
                                                             : 'bg-white hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    <span
-                                                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                                        style={{ backgroundColor: getRouteColor(route.id) }}
-                                                    />
-                                                    {route.id}
-                                                </button>
-                                            ))}
+                                                            }`}
+                                                    >
+                                                        <span
+                                                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                            style={{ backgroundColor: getRouteColor(route.id) }}
+                                                        />
+                                                        {route.id}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}

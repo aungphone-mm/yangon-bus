@@ -19,7 +19,7 @@ interface MapViewProps {
   transferPoints?: Stop[];
   currentPath?: PathResult | null;
   highlightedStops?: Stop[]; // Stops to highlight with their route polylines
-  selectedRouteFilter?: string | null; // Filter to show only this route
+  selectedRouteFilter?: string[]; // Filter to show only these routes (empty = show all)
   stopLookup?: StopLookup | null;
   graph?: PlannerGraph | null;
   onStopClick?: (stop: Stop) => void;
@@ -50,7 +50,7 @@ export default function MapView({
   transferPoints = [],
   currentPath = null,
   highlightedStops = [],
-  selectedRouteFilter = null,
+  selectedRouteFilter = [],
   stopLookup = null,
   graph = null,
   onStopClick,
@@ -621,10 +621,10 @@ export default function MapView({
         // Draw polylines for each route
         routeIds.forEach((routeId) => {
           // Skip if we have a filter and this route doesn't match
-          if (selectedRouteFilter && selectedRouteFilter !== routeId) return;
+          if (selectedRouteFilter.length > 0 && !selectedRouteFilter.includes(routeId)) return;
 
           const color = routeColorMap.get(routeId) || '#3b82f6';
-          const isSelected = !selectedRouteFilter || selectedRouteFilter === routeId;
+          const isSelected = selectedRouteFilter.length === 0 || selectedRouteFilter.includes(routeId);
 
           // Iterate through all edges in the graph
           Object.entries(graph.adjacency).forEach(([fromIdStr, edges]) => {

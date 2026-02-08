@@ -44,7 +44,7 @@ export default function Home() {
   const [pickerOrigin, setPickerOrigin] = useState<Stop | null>(null);
   const [pickerDestination, setPickerDestination] = useState<Stop | null>(null);
   const [pickerPreviewStop, setPickerPreviewStop] = useState<Stop | null>(null);
-  const [pickerSelectedRoute, setPickerSelectedRoute] = useState<string | null>(null);
+  const [pickerSelectedRoutes, setPickerSelectedRoutes] = useState<string[]>([]);
 
   // Favorites hook
   const {
@@ -447,8 +447,8 @@ export default function Home() {
                   onOriginChange={setPickerOrigin}
                   onDestinationChange={setPickerDestination}
                   onPreviewStop={setPickerPreviewStop}
-                  selectedRoute={pickerSelectedRoute}
-                  onSelectRoute={setPickerSelectedRoute}
+                  selectedRoutes={pickerSelectedRoutes}
+                  onSelectRoutes={setPickerSelectedRoutes}
                 />
               </div>
             )}
@@ -738,7 +738,7 @@ export default function Home() {
                 transferPoints={activeTab === 'planner' ? transferPoints : []}
                 currentPath={activeTab === 'planner' ? currentPath : null}
                 highlightedStops={activeTab === 'picker' ? [pickerOrigin, pickerDestination].filter(Boolean) as Stop[] : []}
-                selectedRouteFilter={activeTab === 'picker' ? pickerSelectedRoute : null}
+                selectedRouteFilter={activeTab === 'picker' ? pickerSelectedRoutes : []}
                 stopLookup={stopLookup}
                 graph={activeTab === 'planner' || activeTab === 'picker' ? graph : null}
                 onStopClick={handleStopSelect}
