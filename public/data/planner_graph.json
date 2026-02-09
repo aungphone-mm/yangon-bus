@@ -16662,11 +16662,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 372,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 680,
@@ -16681,11 +16680,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81"
         ],
         "distance": 929,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2": [
@@ -16694,11 +16692,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 357,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1015,
@@ -16713,11 +16710,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81"
         ],
         "distance": 933,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 679,
@@ -29655,11 +29651,10 @@
         "to": 367,
         "routes": [
           "46",
-          "71",
           "92-Thudhamma"
         ],
         "distance": 42,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 368,
@@ -29716,7 +29711,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -29725,7 +29719,7 @@
           "96"
         ],
         "distance": 645,
-        "route_count": 11
+        "route_count": 10
       },
       {
         "to": 616,
@@ -29759,11 +29753,10 @@
         "to": 366,
         "routes": [
           "46",
-          "71",
           "92-Thudhamma"
         ],
         "distance": 42,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 360,
@@ -29819,7 +29812,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -29828,7 +29820,7 @@
           "96"
         ],
         "distance": 647,
-        "route_count": 12
+        "route_count": 11
       }
     ],
     "368": [
@@ -37857,7 +37849,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -37866,7 +37857,7 @@
           "96"
         ],
         "distance": 192,
-        "route_count": 14
+        "route_count": 13
       },
       {
         "to": 609,
@@ -37877,7 +37868,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -37886,7 +37876,7 @@
           "96"
         ],
         "distance": 387,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 361,
@@ -37907,7 +37897,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -37916,7 +37905,7 @@
           "96"
         ],
         "distance": 236,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 610,
@@ -37926,7 +37915,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -37935,7 +37923,7 @@
           "96"
         ],
         "distance": 345,
-        "route_count": 12
+        "route_count": 11
       },
       {
         "to": 360,
@@ -38010,7 +37998,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38019,7 +38006,7 @@
           "96"
         ],
         "distance": 296,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 610,
@@ -38029,7 +38016,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38038,7 +38024,7 @@
           "96"
         ],
         "distance": 353,
-        "route_count": 12
+        "route_count": 11
       },
       {
         "to": 360,
@@ -38060,7 +38046,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38069,7 +38054,7 @@
           "96"
         ],
         "distance": 268,
-        "route_count": 14
+        "route_count": 13
       },
       {
         "to": 609,
@@ -38080,7 +38065,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38089,7 +38073,7 @@
           "96"
         ],
         "distance": 332,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 361,
@@ -38164,7 +38148,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38173,7 +38156,7 @@
           "96"
         ],
         "distance": 332,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 597,
@@ -38184,7 +38167,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38193,7 +38175,7 @@
           "96"
         ],
         "distance": 387,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 616,
@@ -38221,7 +38203,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38230,7 +38211,7 @@
           "96"
         ],
         "distance": 345,
-        "route_count": 12
+        "route_count": 11
       },
       {
         "to": 601,
@@ -38240,7 +38221,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38249,7 +38229,7 @@
           "96"
         ],
         "distance": 353,
-        "route_count": 12
+        "route_count": 11
       },
       {
         "to": 615,
@@ -38425,7 +38405,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38434,7 +38413,7 @@
           "96"
         ],
         "distance": 296,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 367,
@@ -38451,7 +38430,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38460,7 +38438,7 @@
           "96"
         ],
         "distance": 645,
-        "route_count": 11
+        "route_count": 10
       },
       {
         "to": 610,
@@ -38482,7 +38460,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38491,7 +38468,7 @@
           "96"
         ],
         "distance": 268,
-        "route_count": 14
+        "route_count": 13
       },
       {
         "to": 609,
@@ -38509,7 +38486,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -38518,7 +38494,7 @@
           "96"
         ],
         "distance": 647,
-        "route_count": 12
+        "route_count": 11
       },
       {
         "to": 366,
@@ -38623,11 +38599,10 @@
           "24B",
           "3A",
           "46",
-          "62",
-          "71"
+          "62"
         ],
         "distance": 786,
-        "route_count": 7
+        "route_count": 6
       },
       {
         "to": 630,
@@ -38657,7 +38632,6 @@
           "62",
           "6A",
           "6B",
-          "71",
           "7A",
           "7B",
           "81",
@@ -38665,7 +38639,7 @@
           "97"
         ],
         "distance": 1189,
-        "route_count": 19
+        "route_count": 18
       }
     ],
     "629": [
@@ -38689,11 +38663,10 @@
           "24B",
           "3A",
           "46",
-          "62",
-          "71"
+          "62"
         ],
         "distance": 767,
-        "route_count": 6
+        "route_count": 5
       },
       {
         "to": 634,
@@ -38732,7 +38705,6 @@
           "62",
           "6A",
           "6B",
-          "71",
           "7A",
           "7B",
           "81",
@@ -38740,7 +38712,7 @@
           "97"
         ],
         "distance": 1187,
-        "route_count": 19
+        "route_count": 18
       }
     ],
     "630": [
@@ -38979,14 +38951,13 @@
           "3A",
           "46",
           "62",
-          "71",
           "84",
           "92-KhayMarThi",
           "92-Thudhamma",
           "96"
         ],
         "distance": 498,
-        "route_count": 12
+        "route_count": 11
       },
       {
         "to": 631,
@@ -39004,11 +38975,10 @@
           "24B",
           "3A",
           "46",
-          "62",
-          "71"
+          "62"
         ],
         "distance": 786,
-        "route_count": 7
+        "route_count": 6
       },
       {
         "to": 629,
@@ -39049,14 +39019,13 @@
           "3A",
           "46",
           "62",
-          "71",
           "84",
           "92-KhayMarThi",
           "92-Thudhamma",
           "96"
         ],
         "distance": 516,
-        "route_count": 11
+        "route_count": 10
       },
       {
         "to": 2160,
@@ -39083,11 +39052,10 @@
           "24B",
           "3A",
           "46",
-          "62",
-          "71"
+          "62"
         ],
         "distance": 767,
-        "route_count": 6
+        "route_count": 5
       }
     ],
     "636": [
@@ -40119,12 +40087,11 @@
         "routes": [
           "1",
           "46",
-          "71",
           "7B",
           "81"
         ],
         "distance": 734,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 680,
@@ -40150,7 +40117,6 @@
           "62",
           "6A",
           "6B",
-          "71",
           "7A",
           "7B",
           "81",
@@ -40158,7 +40124,7 @@
           "97"
         ],
         "distance": 1187,
-        "route_count": 19
+        "route_count": 18
       }
     ],
     "674": [
@@ -40216,12 +40182,11 @@
         "routes": [
           "1",
           "46",
-          "71",
           "7B",
           "81"
         ],
         "distance": 740,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 628,
@@ -40239,7 +40204,6 @@
           "62",
           "6A",
           "6B",
-          "71",
           "7A",
           "7B",
           "81",
@@ -40247,7 +40211,7 @@
           "97"
         ],
         "distance": 1189,
-        "route_count": 19
+        "route_count": 18
       }
     ],
     "675": [
@@ -40437,12 +40401,11 @@
         "routes": [
           "1",
           "46",
-          "71",
           "7B",
           "81"
         ],
         "distance": 734,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 674,
@@ -40457,11 +40420,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81"
         ],
         "distance": 929,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2,
@@ -40497,12 +40459,11 @@
         "routes": [
           "1",
           "46",
-          "71",
           "7B",
           "81"
         ],
         "distance": 740,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 673,
@@ -40525,11 +40486,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81"
         ],
         "distance": 933,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 694,
@@ -41779,24 +41739,22 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 712,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 757,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 1041,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "746": [
@@ -41805,24 +41763,22 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 672,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 758,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 1040,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "747": [
@@ -41871,24 +41827,22 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 345,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 745,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 1041,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "758": [
@@ -41897,24 +41851,22 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 349,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 746,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 1040,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "761": [
@@ -41923,23 +41875,21 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 197,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 757,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 345,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "762": [
@@ -41948,23 +41898,21 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 196,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 758,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 349,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "763": [
@@ -47786,11 +47734,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 462,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1016,
@@ -47805,12 +47752,11 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 499,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "1012": [
@@ -47827,23 +47773,21 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 466,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1014,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 539,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "1013": [
@@ -47852,24 +47796,22 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 499,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 745,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 712,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "1014": [
@@ -47878,24 +47820,22 @@
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 539,
-        "route_count": 5
+        "route_count": 4
       },
       {
         "to": 746,
         "routes": [
           "1",
           "46",
-          "71",
           "81",
           "97"
         ],
         "distance": 672,
-        "route_count": 5
+        "route_count": 4
       }
     ],
     "1015": [
@@ -47912,22 +47852,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 372,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1011,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 462,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1012,
@@ -47944,11 +47882,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 357,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1,
@@ -47971,11 +47908,10 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 466,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "1017": [
@@ -68001,21 +67937,19 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 677,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2099,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 863,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "1617": [
@@ -68024,21 +67958,19 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 684,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2100,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 871,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "1618": [
@@ -78545,11 +78477,10 @@
         "to": 2086,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 223,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2343,
@@ -78565,21 +78496,19 @@
         "to": 2344,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 272,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2088,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 279,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2086": [
@@ -78587,21 +78516,19 @@
         "to": 2084,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 223,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2087,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 282,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2087": [
@@ -78609,21 +78536,19 @@
         "to": 2089,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 273,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2086,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 282,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2088": [
@@ -78631,21 +78556,19 @@
         "to": 2090,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 275,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2085,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 279,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2089": [
@@ -78653,21 +78576,19 @@
         "to": 2087,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 273,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2091,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 499,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2090": [
@@ -78675,21 +78596,19 @@
         "to": 2088,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 275,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2092,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 494,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2091": [
@@ -78697,21 +78616,19 @@
         "to": 2089,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 499,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2093,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 570,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2092": [
@@ -78719,21 +78636,19 @@
         "to": 2090,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 494,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2094,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 591,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2093": [
@@ -78741,21 +78656,19 @@
         "to": 2091,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 570,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2095,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 573,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2094": [
@@ -78763,21 +78676,19 @@
         "to": 2096,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 563,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2092,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 591,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2095": [
@@ -78785,21 +78696,19 @@
         "to": 2097,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 547,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2093,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 573,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2096": [
@@ -78807,21 +78716,19 @@
         "to": 2098,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 529,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2094,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 563,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2097": [
@@ -78829,21 +78736,19 @@
         "to": 2095,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 547,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2099,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 627,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2098": [
@@ -78851,21 +78756,19 @@
         "to": 2096,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 529,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2100,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 637,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2099": [
@@ -78873,21 +78776,19 @@
         "to": 2097,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 627,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 1616,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 863,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2100": [
@@ -78895,21 +78796,19 @@
         "to": 2098,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 637,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 1617,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 871,
-        "route_count": 3
+        "route_count": 2
       }
     ],
     "2101": [
@@ -78918,22 +78817,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 220,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1616,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 677,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2102": [
@@ -78942,22 +78839,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 212,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 1617,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 684,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2103": [
@@ -78966,22 +78861,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 220,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2105,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1133,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2104": [
@@ -78990,22 +78883,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 212,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2106,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1129,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2105": [
@@ -79014,22 +78905,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 546,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2103,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1133,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2106": [
@@ -79038,22 +78927,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 546,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2104,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1129,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2107": [
@@ -79062,22 +78949,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 529,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2105,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 546,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2108": [
@@ -79086,22 +78971,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 538,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2106,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 546,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2109": [
@@ -79110,22 +78993,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 212,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2107,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 529,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2110": [
@@ -79134,22 +79015,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 213,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2108,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 538,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2111": [
@@ -79158,22 +79037,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 212,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2113,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 280,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2112": [
@@ -79182,22 +79059,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 213,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2114,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 261,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2113": [
@@ -79206,22 +79081,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 280,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2115,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1053,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2114": [
@@ -79230,22 +79103,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 261,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2116,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1061,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2115": [
@@ -79254,22 +79125,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 197,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2113,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1053,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2116": [
@@ -79278,22 +79147,20 @@
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 196,
-        "route_count": 4
+        "route_count": 3
       },
       {
         "to": 2114,
         "routes": [
           "1",
           "46",
-          "71",
           "97"
         ],
         "distance": 1061,
-        "route_count": 4
+        "route_count": 3
       }
     ],
     "2117": [
@@ -80348,7 +80215,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -80357,7 +80223,7 @@
           "96"
         ],
         "distance": 192,
-        "route_count": 14
+        "route_count": 13
       },
       {
         "to": 634,
@@ -80369,14 +80235,13 @@
           "3A",
           "46",
           "62",
-          "71",
           "84",
           "92-KhayMarThi",
           "92-Thudhamma",
           "96"
         ],
         "distance": 498,
-        "route_count": 12
+        "route_count": 11
       },
       {
         "to": 635,
@@ -80398,7 +80263,6 @@
           "3A",
           "46",
           "62",
-          "71",
           "7A",
           "7B",
           "84",
@@ -80407,7 +80271,7 @@
           "96"
         ],
         "distance": 236,
-        "route_count": 13
+        "route_count": 12
       },
       {
         "to": 634,
@@ -80427,14 +80291,13 @@
           "3A",
           "46",
           "62",
-          "71",
           "84",
           "92-KhayMarThi",
           "92-Thudhamma",
           "96"
         ],
         "distance": 516,
-        "route_count": 11
+        "route_count": 10
       }
     ],
     "2162": [
@@ -82805,11 +82668,10 @@
         "to": 2085,
         "routes": [
           "1",
-          "46",
-          "71"
+          "46"
         ],
         "distance": 272,
-        "route_count": 3
+        "route_count": 2
       },
       {
         "to": 2342,

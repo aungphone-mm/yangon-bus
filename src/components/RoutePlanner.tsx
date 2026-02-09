@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Stop, StopLookup, PlannerGraph, PathResult } from '@/types/transit';
-import { findPathWithTransfers, findPathWithWalkingSuggestion } from '@/lib/pathfinder';
+import { usePathfinderWorker } from '@/lib/usePathfinderWorker';
 import StopSearch from './StopSearch';
 
 interface RoutePlannerProps {
   stopLookup: StopLookup;
   graph: PlannerGraph;
+
   onPathFound?: (paths: PathResult[]) => void;
   onRouteSelected?: (path: PathResult) => void;
   onOriginChange?: (stop: Stop | null) => void;
@@ -39,6 +40,9 @@ export default function RoutePlanner({
   // Use ref to avoid useEffect dependency issues
   const onPathFoundRef = useRef(onPathFound);
   onPathFoundRef.current = onPathFound;
+
+  // Initialize the pathfinder worker
+  const { findPath, isReady: workerReady } = usePathfinderWorker();
 
   // Notify parent of origin changes
   useEffect(() => {
@@ -79,9 +83,9 @@ export default function RoutePlanner({
     setPreviewDestination(null);
   };
 
-  // Find path when both stops are selected
+  // Find path when both stops are selected (using Web Worker)
   useEffect(() => {
-    if (origin && destination) {
+    if (origin && destination && workerReady) {
       if (!graph || !graph.adjacency) {
         setError('ဒေတာမတင်ရသေးပါ။ ခဏစောင့်ပါ။');
         return;
@@ -90,33 +94,31 @@ export default function RoutePlanner({
       setIsSearching(true);
       setError(null);
 
-      // Use setTimeout for better UI responsiveness
-      const timeoutId = setTimeout(() => {
-        try {
-          console.log('Starting pathfinding...', { origin: origin.id, dest: destination.id });
-          const startTime = performance.now();
-          const pathResults = findPathWithWalkingSuggestion(graph, origin.id, destination.id);
+      console.log('Starting pathfinding via Web Worker...', { origin: origin.id, dest: destination.id });
+      const startTime = performance.now();
+
+      findPath(graph, origin.id, destination.id)
+        .then((pathResults) => {
           const endTime = performance.now();
           console.log(`Pathfinding complete in ${endTime - startTime}ms`, pathResults);
 
           setResults(pathResults);
           setSelectedIndex(0);
           onPathFoundRef.current?.(pathResults);
-        } catch (err) {
+        })
+        .catch((err) => {
           console.error('Pathfinding error:', err);
           setError('လမ်းကြောင်းရှာရာတွင်အမှားရှိသည်။ ထပ်စမ်းကြည့်ပါ။');
           setResults(null);
-        } finally {
+        })
+        .finally(() => {
           setIsSearching(false);
-        }
-      }, 150);
-
-      return () => clearTimeout(timeoutId);
+        });
     } else {
       setResults(null);
       setError(null);
     }
-  }, [origin, destination, graph]);
+  }, [origin, destination, graph, workerReady, findPath]);
 
   const handleSwap = () => {
     const temp = origin;
